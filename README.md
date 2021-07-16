@@ -41,7 +41,7 @@ Uses [libGD](https://libgd.github.io/), [libpng](http://www.libpng.org/) and [zl
   
 ### Compilation :  
 Note before start:  
-- Compiling the program with Cygwin have tiny downside, doing it that way will require you to recover 26 dlls from Cygwin with a total size of 11.4Mb (excl program itself). Using Mingw, it goes down to 3 dlls for a size under a Mb (incl program).  
+- Compiling the program with Cygwin have tiny downside, doing it that way will require you to recover 26 dlls from Cygwin with a total size of 11.4Mb (excl program itself). Using Mingw (linux), it goes down to 3 dlls for a size under a Mb (incl program).  
 - Instructions will be provided "as is".  
 
 TODO...libGD,libpng,zlib...  
