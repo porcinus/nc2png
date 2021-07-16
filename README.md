@@ -39,10 +39,10 @@ Uses [libGD](https://libgd.github.io/), [libpng](http://www.libpng.org/) and [zl
 ![preview](img/prev02.png)  
   
   
-### Compilation :  
+### Compile :  
 Note before start:  
 Depending on the way you compile this program, overhead will highly vary (Windows):  
-- VScode+Cygwin64 : 26 dlls from Cygwin dirs with a total size of 11.4Mb (excl program).
+- VScode+Cygwin64 : 24 dlls from Cygwin dirs with a total size of 11.4Mb (excl program), look to have troubles with W10.
 - Cross compile on Linux using Mingw : 3 dlls for a size under a Mb (incl program).
 - Instructions will be provided "as is".  
   
