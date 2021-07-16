@@ -50,4 +50,32 @@ TODO...libGD,libpng,zlib...
 ### Usage :  
 Extract files wherever you want than drag a .nc/.gcode or any file that contain Gcode.  
 You can also set the program as default open.  
+  
+
+
+
+### Compile using MSYS2 :  
+- Download lastest package from [MSYS2](https://www.msys2.org/)
+  
+- Run MSYS2 MinGW and install needed packages :
+  - 32bits : `pacman -S --needed base-devel mingw-w64-i686-toolchain mingw-w64-i686-libgd`
+  - 64bits : `pacman -S --needed base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-libgd`
+  
+- Update Windows environnement variable 'Path' by adding proper path :
+  - 32bits : `FULL_PATH_TO_MSYS64\mingw32\bin`
+  - 64bits : `FULL_PATH_TO_MSYS64\mingw64\bin`  
+  
+- From sources downloaded from Github:
+  - Update `.vscode\tasks.json` to correct MSYS2 paths.
+  
+- Compiling nc2png.rc:
+  - Run Windows command:
+    - 32bits :  
+`cd FULL_PATH_TO_MSYS64\mingw32\bin\`  
+`windres -F pe-i386 -i "FULL_PATH_TO_SOURCE\\nc2png.rc" -o "FULL_PATH_TO_SOURCE\\nc2png.res.o"`
+    - 64bits :  
+`cd FULL_PATH_TO_MSYS64\mingw64\bin\`  
+`windres -F pe-x86-64 -i "FULL_PATH_TO_SOURCE\\nc2png.rc" -o "FULL_PATH_TO_SOURCE\\nc2png.res.o"`
+  
+- Compile the program in VScode.
 
