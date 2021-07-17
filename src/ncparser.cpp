@@ -147,6 +147,8 @@ int NCparseFile (char *file, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStru
                         if(debugOutput){fprintf (ncFileDebugHandle, "DEBUG: CV: Simple tool detected : T:%i, dia:%f\n",tmpInt,tmpFloat);}
                     } else {
                         if (ops[commentIndex].distWork > 0. && ops[commentIndex].distFast > 0. && commentIndex + 1 < arrSizes->distTimeStrucLimit) {commentIndex++;} //increment comment index number
+                        
+                        //TODO: implement UTF8 conversion here
                         strncpy (ops[commentIndex].name, strBuffer, 63); //backup comment
 
                         //printf("commentIndex:%d, distFast:%lf, distWork:%lf\n",commentIndex,ops[commentIndex].distFast,ops[commentIndex].distWork);

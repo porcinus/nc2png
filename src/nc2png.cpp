@@ -39,7 +39,7 @@ int main (int argc, char *argv[]) {
             STARTUPINFO si; PROCESS_INFORMATION pi; ZeroMemory( &si, sizeof(si) ); si.cb = sizeof(si); ZeroMemory( &pi, sizeof(pi) ); //because needed...
             if(debug){fprintf(stderr,"DEBUG: CMD: %s\n", tmpArgs);}
             if (!CreateProcess(NULL, tmpArgs, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
-                if(debug){fprintf(stderr,"DEBUG: Create process failed (%d)\n", GetLastError());}
+                if(debug){fprintf(stderr,"DEBUG: Create process failed (%ld)\n", GetLastError());}
                 printf("%s\n", strMain[language][STR_MAIN::ANSICON_MODULE]);
             } else {
                 if(debug){fprintf(stderr,"DEBUG: New process for Ansicon created with success\n");}
@@ -81,11 +81,6 @@ int main (int argc, char *argv[]) {
 		} else if (strcmp(argv[i], "-reset") == 0) {configSave (true); return 0; //reset config mode
 		} else if (strcmp(argv[i], "-ansicon") == 0) {shouldRunAnsicon = true; //should run in ansicon mode
 		} else if (strcmp(argv[i], "-debug") == 0) {debug = true; //debug mode
-        } else if (strcmp(argv[i], "-default") == 0) { //set program as default for nc format
-
-
-
-
         } else {sprintf (ncFilePath, "%s %s", ncFilePath, argv[i]);}
 	}
 

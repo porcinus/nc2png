@@ -20,7 +20,6 @@ Related to gcode parsing.
 #include <ctype.h>
 #include <math.h>
 
-
 //vars
 extern unsigned int speedFastXY;
 

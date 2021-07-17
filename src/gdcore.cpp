@@ -209,6 +209,7 @@ int gdPreview (char *file, int gdPrevWidth, int gdPrevArcRes, ncFlagsStruc *flag
     int gdPrevTxtLines = 6; if (linescount->tools > 0) {gdPrevTxtLines++;}
 
     gdImagePtr gdPrevImage = gdImageCreateTrueColor (gdPrevWidthFull, gdPrevHeight + gdPrevStrFontHeight * gdPrevTxtLines + 4);
+
     if (gdPrevImage != NULL) {
         if (linescount->tools > 0) {gdPrevTxtLines--;}
 
@@ -437,7 +438,8 @@ int gdPreview (char *file, int gdPrevWidth, int gdPrevArcRes, ncFlagsStruc *flag
         sprintf (previewFilePath, "%s.png", file);
         gdFileHandle = fopen (previewFilePath, "wb");
         if (gdFileHandle != NULL) {
-            gdImagePngEx(gdPrevImage, gdFileHandle, 9);
+            //gdImagePngEx(gdPrevImage, gdFileHandle, 9); //around 10 time slower than gdImagePng
+            gdImagePng(gdPrevImage, gdFileHandle);
             fclose(gdFileHandle);
         } else {gdImageDestroy(gdPrevImage); return 1;} //ERR1 : fail to write
         gdImageDestroy(gdPrevImage);
