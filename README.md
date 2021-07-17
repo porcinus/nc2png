@@ -47,6 +47,7 @@ You can also set the program as default open.
   
 ### Compile :  
 Note before start:  
+- If compiling from VScode, rename 'vscode' to '.vscode'.  
 - Instructions are be provided "as is".  
 - If you want to try this program and don't trust my release, well, you will have hard time...  
 - To avoid as much hypocrisy as possible, all binaries I compile on Linux have debug symbols removed (can easily save 25-50% size).  
