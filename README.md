@@ -11,6 +11,7 @@ Require zlib1g-dev, libpng-dev, libgd-dev to be installed on Linux in order to c
 - UTF support.  
 - This code is not really optimized and a bit messy.  
 - Doesn't support axis accelerations.  
+- PPM Exif.
   
   
 #### Limitations (low chance of implementation):  
