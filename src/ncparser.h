@@ -8,15 +8,9 @@ Related to gcode parsing.
 #ifndef NCPARSER_H
 #define NCPARSER_H
 
-#include <cstring> //string
-#include <limits.h> //limits
-//#include <fcntl.h> //file io
-#include <stdio.h> //stream io
-//#include <stdlib.h> //standard
-//#include <cstdio> //c stream io
-//#include <cstdlib> //c standard
-//#include <sys/stat.h> //file stat
-//#include <unistd.h> //standard
+#include <cstring>
+#include <limits.h>
+#include <stdio.h>
 #include <ctype.h>
 #include <math.h>
 
@@ -33,15 +27,15 @@ struct ncLinesCountStruc {unsigned int all = 0; unsigned int commented = 0; unsi
 struct ncArraySize {unsigned lineStrucLimit = 1; unsigned distTimeStrucLimit = 100; unsigned toolStrucLimit = 100;};
 
 //func
-bool inArrayInt (int*, int, int);
-void secToClock (char*, double);
-unsigned int NCcountLines (char*);
-double numDiffDouble (double, double);
-double rad2deg (double);
-double deg2rad (double);
-double angle3points(double, double, double, double, double, double);
-void arcLimits(double*, double, double, double, double, double, double, int);
-int NCparseFile (char*, ncFlagsStruc*, ncLineStruc*, ncToolStruc*, ncDistTimeStruc*, ncLimitStruc*, ncLinesCountStruc*, ncArraySize*, bool);
+bool inArrayInt (int*, int, int); //check if int in array
+void secToClock (char*, double); //convert seconds to char array in format : MM:SS / H:MM:SS
+unsigned int NCcountLines (char*); //count number of lines into a file
+double numDiffDouble (double, double); //absolute delta between 2 doubles
+double rad2deg (double); //convert radian to degree
+double deg2rad (double); //convert degree to radian
+double angle3points(double, double, double, double, double, double); //compute angle based on start/end/center coordonates of a arc
+void arcLimits(double*, double, double, double, double, double, double, int); //compute arc limits
+int NCparseFile (char*, ncFlagsStruc*, ncLineStruc*, ncToolStruc*, ncDistTimeStruc*, ncLimitStruc*, ncLinesCountStruc*, ncArraySize*, bool); //extract data from gcode file
 
 
 

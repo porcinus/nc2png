@@ -8,11 +8,10 @@ Related to multilanguage support.
 #ifndef LANG_H
 #define LANG_H
 
-#include <stdio.h> //stream io
-#include <cstring> //string
+#include <stdio.h>
+#include <cstring>
 #if defined _WIN32 || defined __CYGWIN__
     #include <windows.h>
-    //#include <tchar.h>
 #else
     #include <clocale>
 #endif
@@ -21,7 +20,7 @@ Related to multilanguage support.
 enum LANG_ID {LANG_EN, LANG_FR} ;
 
 //funct
-unsigned int getLocale (void);
+unsigned int getLocale (void); //get system locale id
 
 //vars
 extern bool debug; //debug mode bool

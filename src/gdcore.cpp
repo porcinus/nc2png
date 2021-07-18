@@ -7,29 +7,8 @@ Related to libGD, generate preview from a custom structs (ncparser.h/cpp).
 
 #include "gdcore.h"
 
-void nns_gd_test (void) { //for dev purpose
-    gdImagePtr gdPreviewImage;
-    FILE *gdFileHandle;
-    int gdPreviewImageWidth = 800, gdPreviewImageHeight = 600;
-    gdPreviewImage = gdImageCreateTrueColor (gdPreviewImageWidth, gdPreviewImageHeight);
-    gdImageSetAntiAliased (gdPreviewImage, 1);
-
-    int gdColorBlack = gdImageColorAllocate (gdPreviewImage, 0, 0, 0);
-    int gdColorRed = gdImageColorAllocate (gdPreviewImage, 255, 0, 0);
-    int gdColorGreen = gdImageColorAllocate (gdPreviewImage, 0, 255, 0);
-
-    gdImageFill (gdPreviewImage, 0, 0, gdColorBlack);
-    gdImageLine (gdPreviewImage, 0, 0, gdPreviewImageWidth, gdPreviewImageHeight, gdColorRed);
-    gdImageLine (gdPreviewImage, 0, gdPreviewImageHeight, gdPreviewImageWidth, 0, gdColorGreen);
-
-    gdFileHandle = fopen("test.png", "wb");
-    gdImagePngEx(gdPreviewImage, gdFileHandle, 9);
-    fclose(gdFileHandle);
-    gdImageDestroy(gdPreviewImage);
-}
-
  
-void NNSgdImageLineDashed (gdImagePtr image, int x1, int y1, int x2, int y2, int color1, int color2, int space) {
+void NNSgdImageLineDashed (gdImagePtr image, int x1, int y1, int x2, int y2, int color1, int color2, int space) { //draw dashed line the proper way, GD one is glitched
     int style [space * 2 + 1];
     for(int i=0;i<space;i++){style[i]=color1;}
     for(int i=0;i<space;i++){style[space + i]=color2;}
@@ -37,13 +16,13 @@ void NNSgdImageLineDashed (gdImagePtr image, int x1, int y1, int x2, int y2, int
     gdImageLine (image, x1, y1, x2, y2, gdStyled);
 }
 
-int NNSgdImageColorAllocateFade (gdImagePtr image, int *rgbArr1, int *rgbArr2, double fade) {
+int NNSgdImageColorAllocateFade (gdImagePtr image, int *rgbArr1, int *rgbArr2, double fade) { //proportional color gradian
     if (fade < 0.){return gdImageColorAllocate (image, rgbArr1[0], rgbArr1[1], rgbArr1[2]);}
     if (fade > 1.){return gdImageColorAllocate (image, rgbArr2[0], rgbArr2[1], rgbArr2[2]);}
     return gdImageColorAllocate (image, rgbArr1[0] + (rgbArr2[0] - rgbArr1[0]) * fade, rgbArr1[1] + (rgbArr2[1] - rgbArr1[1]) * fade, rgbArr1[2] + (rgbArr2[2] - rgbArr1[2]) * fade);
 }
 
-void NNSgdImageArcThick (gdImagePtr image, int cx, int cy, int width, int height, int start, int end, int thickness, int color, int resolution) {
+void NNSgdImageArcThick (gdImagePtr image, int cx, int cy, int width, int height, int start, int end, int thickness, int color, int resolution) { //draw thick arc
     if (resolution < 1) {resolution = 20;}
     if (thickness < 2) {gdImageArc (image, cx, cy, width, height, start, end, color); return;}
     double a1 = deg2rad(start), a2 = deg2rad(end), arclenght = abs(a2 - a1) * (height / 2);
@@ -61,7 +40,7 @@ void NNSgdImageArcThick (gdImagePtr image, int cx, int cy, int width, int height
     gdImageFilledPolygon (image, pointsArr, (step+1)*2, color); delete pointsArr;
 }
 
-void NNSgdImageLineThick (gdImagePtr image, int x1, int y1, int x2, int y2, int thickness, int color) {
+void NNSgdImageLineThick (gdImagePtr image, int x1, int y1, int x2, int y2, int thickness, int color) { //draw thick line
     if (thickness < 2) {gdImageLine (image, x1, y1, x2, y2, color); return;}
     gdImageFilledEllipse (image, x1, y1, thickness, thickness, color); gdImageFilledEllipse (image, x2, y2, thickness, thickness, color);
     int halfthick = thickness / 2;
@@ -80,7 +59,7 @@ void NNSgdImageLineThick (gdImagePtr image, int x1, int y1, int x2, int y2, int 
     }
 }
 
-void NNSgdImageLineThickV (gdImagePtr image, int x1, int y1, int x2, int y2, double d1, double d2, int color) {
+void NNSgdImageLineThickV (gdImagePtr image, int x1, int y1, int x2, int y2, double d1, double d2, int color) { //draw thick line with different start and end thickness
     if(x2 - x1 <= 0){int tmpx = x1, tmpy = y1, tmpd = d1; x1 = x2; y1 = y2; x2 = tmpx; y2 = tmpy; d1 = d2; d2 = tmpd;}
     gdImageFilledEllipse (image, x1, y1, d1, d1, color); gdImageFilledEllipse (image, x2, y2, d2, d2, color);
     int hd1 = d1/2, hd2 = d2/2, vx = x2- x1, vy = y2 - y1;
@@ -97,7 +76,7 @@ void NNSgdImageLineThickV (gdImagePtr image, int x1, int y1, int x2, int y2, dou
 
 }
 
-void NNSgdImageArcThickV (gdImagePtr image, int cx, int cy, int width, int height, int start, int end, double d1, double d2, int color, int resolution) {
+void NNSgdImageArcThickV (gdImagePtr image, int cx, int cy, int width, int height, int start, int end, double d1, double d2, int color, int resolution) { //draw thick arc with different start and end thickness
     if (resolution < 1) {resolution = 20;}
     if (d1 < 2.) {gdImageArc (image, cx, cy, width, height, start, end, color); return;}
     double a1 = deg2rad(start), a2 = deg2rad(end), arclenght = abs(a2 - a1) * (height / 2);
@@ -118,7 +97,7 @@ void NNSgdImageArcThickV (gdImagePtr image, int cx, int cy, int width, int heigh
     gdImageFilledPolygon (image, pointsArr, (step+1)*2, color); delete pointsArr;
 }
 
-void NNSgdImageArrow (gdImagePtr image, int x, int y, int lenght, int width, int height, int dir, int color, bool filled) {
+void NNSgdImageArrow (gdImagePtr image, int x, int y, int lenght, int width, int height, int dir, int color, bool filled) { //draw simple arrow
     gdPoint *pointsArr = new gdPoint [5];
     if (dir == 0) { //x+
         gdImageLine (image, x, y, x + lenght, y, color);
@@ -148,8 +127,7 @@ void NNSgdImageArrow (gdImagePtr image, int x, int y, int lenght, int width, int
     delete pointsArr;
 }
 
-
-void NNSgdImageArc (gdImagePtr image, int cx, int cy, int width, int height, int start, int end, int color, int resolution) {
+void NNSgdImageArc (gdImagePtr image, int cx, int cy, int width, int height, int start, int end, int color, int resolution) { //draw arc, allow precision definition, GD one draw one line per degree
     if (resolution < 1) {resolution = 20;}
     double a1 = deg2rad(start), a2 = deg2rad(end), arclenght = abs(a2 - a1) * (height / 2);
     int hwidth = width/2, hheight = height/2, step = (double)ceil(arclenght / resolution) + 1;
@@ -162,7 +140,7 @@ void NNSgdImageArc (gdImagePtr image, int cx, int cy, int width, int height, int
     }
 }
 
-void sec2charArr (char *arr, double time) {
+void sec2charArr (char *arr, double time) { //convert seconds to char array in format : XXsec / XXmin / XXh XXmin
     int hours = 0, minutes = 0, seconds = 0;
     seconds = floor (time);
     if (seconds < 60) {
@@ -178,7 +156,39 @@ void sec2charArr (char *arr, double time) {
     }
 }
 
-int gdPreview (char *file, int gdPrevWidth, int gdPrevArcRes, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStruc *tools, ncDistTimeStruc *ops, ncLimitStruc *limits, ncLinesCountStruc *linescount, bool debugOutput) {
+int NNSPNGaddPPM (char *file, unsigned int ppm) { //write specific PPM to PNG file, can be done via libpng but it is faster that way
+    FILE* tmpHandle = fopen(file, "rb+"); //file stream
+    if (tmpHandle != NULL) { //valid file stream
+        char tmpBuffer[5]; //signature read buffer
+        if (fgets (tmpBuffer , 5 , tmpHandle) != NULL){if (strcmp(tmpBuffer, "\x89PNG\0") != 0){fclose(tmpHandle); return 0;} //security, not png signature
+        } else {fclose(tmpHandle); return 0;} //something failed when trying to read signature
+        char pHYsIdent[] = "pHYs"; char currChar; unsigned int identPos = 0, seek = 5;
+        fseek (tmpHandle, seek , SEEK_SET); //seek after signature
+        do {
+            seek++; currChar = (char) fgetc (tmpHandle);
+            if ((char)currChar == (char)pHYsIdent[identPos]) {identPos++;} else {identPos = 0;}
+            if (currChar == EOF || seek > 255) {fclose(tmpHandle); return 0;} //failed to found pHYs block after 255 bytes
+        } while (identPos < 4);
+        fseek (tmpHandle, seek-4 , SEEK_SET); //seek before pHYs block start
+
+        char tmpBufferPPM[14] = {'p','H','Y','s','\0','\0','\0','\0','\0','\0','\0','\0','\1'}; //pHYs block w/o crc32
+
+        char *tmpPtr = (char*) &ppm; //ppm pointer to swap endian
+        tmpBufferPPM[4] = tmpPtr[3]; tmpBufferPPM[5] = tmpPtr[2]; tmpBufferPPM[6] = tmpPtr[1]; tmpBufferPPM[7] = tmpPtr[0]; //swap endian x ppm
+        tmpBufferPPM[8] = tmpPtr[3]; tmpBufferPPM[9] = tmpPtr[2]; tmpBufferPPM[10] = tmpPtr[1]; tmpBufferPPM[11] = tmpPtr[0]; //swap endian y ppm
+        fwrite(&tmpBufferPPM, 1, 13, tmpHandle); //write ppm block
+
+        unsigned long crc = crc32 (0, (Bytef*) &tmpBufferPPM, 13); //use crc32 funct from zlib
+        tmpPtr = (char*) &crc; tmpBufferPPM[0] = tmpPtr[3]; tmpBufferPPM[1] = tmpPtr[2]; tmpBufferPPM[2] = tmpPtr[1]; tmpBufferPPM[3] = tmpPtr[0]; //swap endian
+        fwrite(&tmpBufferPPM, 1, 4, tmpHandle); //write crc
+
+        fclose(tmpHandle); //close stream
+        return 1; //success
+    }
+    return 0; //failed
+}
+
+int gdPreview (char *file, int gdPrevWidth, int gdPrevArcRes, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStruc *tools, ncDistTimeStruc *ops, ncLimitStruc *limits, ncLinesCountStruc *linescount, bool debugOutput) { //generate image preview off ncparser data
     FILE *gdFileHandle; //file handle
 
     char previewFilePath [PATH_MAX]; //full path to nc file
@@ -441,6 +451,7 @@ int gdPreview (char *file, int gdPrevWidth, int gdPrevArcRes, ncFlagsStruc *flag
             //gdImagePngEx(gdPrevImage, gdFileHandle, 9); //around 10 time slower than gdImagePng
             gdImagePng(gdPrevImage, gdFileHandle);
             fclose(gdFileHandle);
+            NNSPNGaddPPM (previewFilePath, (unsigned int)(gdPrevScale * 1000.)); //write proper ppm
         } else {gdImageDestroy(gdPrevImage); return 1;} //ERR1 : fail to write
         gdImageDestroy(gdPrevImage);
     } else {return 2;} //ERR2 : fail to create gdImagePtr

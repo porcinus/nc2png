@@ -10,18 +10,9 @@ Main file
 
 char programversion[]="0.1a"; //program version
 
-#include <cstring> //string
-//#include <limits.h> //limits
-#include <fcntl.h> //file io
-//#include <stdio.h> //stream io
-//#include <stdlib.h> //standard
-//#include <cstdio> //c stream io
-//#include <cstdlib> //c standard
-#include <sys/stat.h> //file stat
-//#include <unistd.h> //standard
-//#include <ctype.h>
-//#include <math.h>
-//#include <ctime>
+#include <cstring>
+#include <fcntl.h>
+#include <sys/stat.h>
 extern "C" {
 #include <png.h>
 #include <zlib.h>
@@ -85,12 +76,12 @@ const char *strMainEN [] = {
 /*REPORT_L14*/ "	Work mode :  \033[1;36m%s\033[0m\n",
 /*REPORT_L15*/ "	Fast mode :  \033[1;36m%s\033[0m\n",
 /*REPORT_L16*/ "	Total time : \033[1;36m%s\033[0m\n",
-/*REPORT_L17*/ "		'\033[1;36m%ls\033[0m' : Work : \033[1;36m%s\033[0m - Fast : \033[1;36m%s\033[0m\n",
+/*REPORT_L17*/ "		'\033[1;36m%s\033[0m' : Work : \033[1;36m%s\033[0m - Fast : \033[1;36m%s\033[0m\n",
 /*REPORT_L18*/ "Times (\033[1;33m%d%%\033[0m):\n",
 /*REPORT_L19*/ "	Work mode :  \033[1;36m%s\033[0m\n",
 /*REPORT_L20*/ "	Fast mode :  \033[1;36m%s\033[0m\n",
 /*REPORT_L21*/ "	Total time : \033[1;36m%s\033[0m\n",
-/*REPORT_L22*/ "		'\033[1;36m%ls\033[0m' : Work : \033[1;36m%s\033[0m - Fast : \033[1;36m%s\033[0m\n",
+/*REPORT_L22*/ "		'\033[1;36m%s\033[0m' : Work : \033[1;36m%s\033[0m - Fast : \033[1;36m%s\033[0m\n",
 /*REPORT_L23*/ "Limits:\n",
 /*REPORT_L24*/ "	Extremes X : \033[1;36m%.02lfmm\033[0m , \033[1;36m%.02lfmm\033[0m (\033[1;32m%.02lfmm\033[0m)\n",
 /*REPORT_L25*/ "	Extremes Y : \033[1;36m%.02lfmm\033[0m , \033[1;36m%.02lfmm\033[0m (\033[1;32m%.02lfmm\033[0m)\n",
@@ -177,8 +168,8 @@ const char **strMain [] = {strMainEN, strMainFR};
 
 
 //ansicon.h
-extern int checkAnsiconExists (void);
-extern int checkAnsiconModule (void);
+extern int checkAnsiconExists (void); //search thru PATH for ansicon
+extern int checkAnsiconModule (void); //search thru current process for ansicon module loaded
 
 //config.h
 extern bool configSave (bool); //save config file
@@ -187,11 +178,11 @@ extern void configEdit (bool); //edit config file
 extern void configManu (void); //onfly config edit without save
 
 //gdcore.h
-extern void sec2charArr (char*, double);
-extern int gdPreview (char*, int, int, ncFlagsStruc*, ncLineStruc*, ncToolStruc*, ncDistTimeStruc*, ncLimitStruc*, ncLinesCountStruc*, bool);
+extern void sec2charArr (char*, double); //convert seconds to char array in format : XXsec / XXmin / XXh XXmin
+extern int gdPreview (char*, int, int, ncFlagsStruc*, ncLineStruc*, ncToolStruc*, ncDistTimeStruc*, ncLimitStruc*, ncLinesCountStruc*, bool); //generate image preview off ncparser data
 
 //lang.h
-extern unsigned int getLocale (void);
+extern unsigned int getLocale (void); //get system locale id
 
 //vars
 bool debug = false; //debug mode bool

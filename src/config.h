@@ -10,7 +10,7 @@ Related to configuration functions/vars.
 
 #include <stdio.h>
 #include <cstdlib>
-#include <cstring> //string
+#include <cstring>
 
 //enum LANG_ID {LANG_EN, LANG_FR} ;
 enum STR_CONFIG {RESET_SUCCESS,SAVE_SUCCESS,WRITE_FAILED,SET_NEW_SETTINGS,SET_SPEED_XY,SET_SPEED_Z,SET_SPEED_PERC,SET_GRIDSIZE,SET_ARCRES,NEW_SETTINGS,SAVE_CONFIRM};
@@ -59,7 +59,7 @@ extern unsigned int speedPercent; //max running percent speed, used as a overrid
 extern unsigned int gdWidth; //max grid width/height in px
 extern unsigned int gdArcRes; //arc drawing resolution
 extern unsigned int language; //language id
-unsigned int *configArr [] = {&speedFastXY, &speedFastZ, &speedPercent, &gdWidth, &gdArcRes};
-unsigned int configArrSize = sizeof(configArr) / sizeof(*configArr);
+unsigned int *configArr [] = {&speedFastXY, &speedFastZ, &speedPercent, &gdWidth, &gdArcRes}; //config pointer array to ease config reading
+unsigned int configArrSize = sizeof(configArr) / sizeof(*configArr); //config array size
 
 #endif

@@ -7,18 +7,18 @@ Related to gcode parsing.
 
 #include "ncparser.h"
 
-bool inArrayInt (int *arr, int value, int arrSize) { //check if value in array
+bool inArrayInt (int *arr, int value, int arrSize) { //check if int in array
     for (int i=0; i < arrSize; i++) {if (arr[i] == value) {return true;}}
     return false;
 }
 
-void secToClock (char *arr, double value) {
+void secToClock (char *arr, double value) { //convert seconds to char array in format : MM:SS / H:MM:SS
     int hours = 0, minutes = 0, seconds = 0;
     hours = floor (value / 3600); minutes = floor ((value - (hours * 3600)) / 60); seconds = value - ((hours * 3600) + (minutes * 60));
     if (hours>0) {sprintf(arr, "%d:%02d:%02d", hours, minutes, seconds);} else {sprintf(arr, "%02d:%02d", minutes, seconds);}
 }
 
-unsigned int NCcountLines (char *file){
+unsigned int NCcountLines (char *file){ //count number of lines into a file
     unsigned int lineCount = 1; //line count var
     char tmpBuffer [4096];
     FILE* tmpHandle = fopen(file, "r"); //file stream
@@ -29,12 +29,12 @@ unsigned int NCcountLines (char *file){
     return 0; //failed
 }
 
-double numDiffDouble (double n1, double n2) {if(n1 > n2){return abs(n2 - n1);}else{return abs(n1 - n2);}}
-double rad2deg (double rad) {return rad * (180.0 / 3.14159265358979323846);}
-double deg2rad (double deg) {return deg * (3.14159265358979323846 / 180.0);}
-double angle3points(double centerX, double centerY, double x1, double y1, double x2, double y2){double v1x = x2 - centerX; double v1y = y2 - centerY; double v2x = x1 - centerX; double v2y = y1 - centerY; return acos ((v1x * v2x + v1y * v2y) / (sqrt (v1x*v1x + v1y*v1y) * sqrt (v2x*v2x + v2y*v2y)));}
+double numDiffDouble (double n1, double n2) {if(n1 > n2){return abs(n2 - n1);}else{return abs(n1 - n2);}} //absolute delta between 2 doubles
+double rad2deg (double rad) {return rad * (180.0 / 3.14159265358979323846);} //convert radian to degree
+double deg2rad (double deg) {return deg * (3.14159265358979323846 / 180.0);} //convert degree to radian
+double angle3points(double centerX, double centerY, double x1, double y1, double x2, double y2){double v1x = x2 - centerX; double v1y = y2 - centerY; double v2x = x1 - centerX; double v2y = y1 - centerY; return acos ((v1x * v2x + v1y * v2y) / (sqrt (v1x*v1x + v1y*v1y) * sqrt (v2x*v2x + v2y*v2y)));} //compute angle based on start/end/center coordonates of a arc
 
-void arcLimits(double *arr, double centerX, double centerY, double width, double height, double angleStart, double angleEnd, int resolution){
+void arcLimits(double *arr, double centerX, double centerY, double width, double height, double angleStart, double angleEnd, int resolution){ //compute arc limits
     if (resolution < 1){resolution = 20;}
     double xMin, xMax, yMin, yMax, x, y;
     double hwidth = width / 2; double hheight = height / 2;
@@ -59,7 +59,7 @@ void arcLimits(double *arr, double centerX, double centerY, double width, double
     arr [0] = xMin; arr [1] = xMax; arr [2] = yMin; arr [3] = yMax;
 }
 
-int NCparseFile (char *file, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStruc *tools, ncDistTimeStruc *ops, ncLimitStruc *limits, ncLinesCountStruc *linescount, ncArraySize *arrSizes, bool debugOutput) {
+int NCparseFile (char *file, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStruc *tools, ncDistTimeStruc *ops, ncLimitStruc *limits, ncLinesCountStruc *linescount, ncArraySize *arrSizes, bool debugOutput) { //extract data from gcode file
     FILE *ncFileHandle, *ncFileDebugHandle; //file handle
     int currLine = 1; //current line in file
     bool strFirstChar = true; //used to avoid things on first caracter

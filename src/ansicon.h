@@ -20,8 +20,8 @@ Related to Ansicon, used on Windows to provide console ansi color compatibility.
 #include <sys/stat.h> //file stat
 
 //func
-int checkAnsiconExists (void);
-int checkAnsiconModule (void);
+int checkAnsiconExists (void); //search thru PATH for ansicon
+int checkAnsiconModule (void); //search thru current process for ansicon module loaded
 
 //vars
 extern bool debug; //debug mode bool
