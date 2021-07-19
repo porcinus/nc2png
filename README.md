@@ -11,7 +11,6 @@ Require zlib1g-dev, libpng-dev, libgd-dev to be installed on Linux in order to c
 - UTF support.  
 - This code is not really optimized and a bit messy.  
 - Doesn't support axis accelerations.  
-- PPM Exif.
   
   
 #### Limitations (low chance of implementation):  
@@ -33,6 +32,7 @@ Require zlib1g-dev, libpng-dev, libgd-dev to be installed on Linux in order to c
 - Partially compatible with Cutview codes (used to include visual tool width).  
 - Different colors depending on the kind of move.  
 - If containing Cutview tool definition, display "cut" toolpaths with variable color depending on cut depth.  
+- PPM implementation to allow real size printing.
   
   
 #### Preview :
