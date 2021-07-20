@@ -8,7 +8,7 @@ Main file
 #ifndef NC2PNG_H
 #define NC2PNG_H
 
-char programversion[]="0.1a"; //program version
+char programversion[]="0.2a"; //program version
 
 #include <cstring>
 #include <fcntl.h>

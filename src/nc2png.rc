@@ -1,6 +1,6 @@
 1 VERSIONINFO
-FILEVERSION     0,0,0,1
-PRODUCTVERSION  0,0,0,1
+FILEVERSION     0,0,0,2
+PRODUCTVERSION  0,0,0,2
 BEGIN
   BLOCK "StringFileInfo"
   BEGIN
@@ -8,12 +8,12 @@ BEGIN
     BEGIN
       VALUE "CompanyName", "https://github.com/porcinus/"
       VALUE "FileDescription", "Generate preview and time estimations based on gcode file (milling)"
-      VALUE "FileVersion", "0.1a"
+      VALUE "FileVersion", "0.2a"
       VALUE "InternalName", "nc2png"
       VALUE "LegalCopyright", "Check Github page for user license"
       VALUE "OriginalFilename", "nc2png.exe"
       VALUE "ProductName", "nc2png"
-      VALUE "ProductVersion", "0.1a"
+      VALUE "ProductVersion", "0.2a"
     END
   END
     BLOCK "VarFileInfo"
