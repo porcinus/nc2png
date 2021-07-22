@@ -119,11 +119,8 @@ void NNSgdImageArrow (gdImagePtr image, int x, int y, int lenght, int width, int
         pointsArr[0].x = x-height/2; pointsArr[0].y = y-lenght+width;
         pointsArr[1].x = x; pointsArr[1].y = y-lenght;
         pointsArr[2].x = x+height/2; pointsArr[2].y = y-lenght+width;
-    } else {return;}
-
-    if (filled) {gdImageFilledPolygon (image, pointsArr, 3, color);
-    } else {gdImagePolygon (image, pointsArr, 3, color);}
-
+    } else {delete pointsArr; return;}
+    if (filled) {gdImageFilledPolygon (image, pointsArr, 3, color);} else {gdImagePolygon (image, pointsArr, 3, color);}
     delete pointsArr;
 }
 
@@ -133,7 +130,6 @@ void NNSgdImageArc (gdImagePtr image, int cx, int cy, int width, int height, int
     int hwidth = width/2, hheight = height/2, step = (double)ceil(arclenght / resolution) + 1;
     double stepangle = (a2 - a1) / step;
     int lastx = cx + cos(a1) * hwidth, lasty = cy + sin(a1) * hheight, x, y;
-    
     for (int i=1; i < step + 1; i++) {
         x = cx + cos(a1 + stepangle * i) * hwidth; y = cy + sin(a1 + stepangle * i) * hheight;
         gdImageLine (image, x, y, lastx, lasty, color); lastx = x; lasty = y;
@@ -143,11 +139,8 @@ void NNSgdImageArc (gdImagePtr image, int cx, int cy, int width, int height, int
 void sec2charArr (char *arr, double time) { //convert seconds to char array in format : XXsec / XXmin / XXh XXmin
     int hours = 0, minutes = 0, seconds = 0;
     seconds = floor (time);
-    if (seconds < 60) {
-        sprintf(arr, "%dsec", seconds);
-    } else if (seconds < 3600) {
-        minutes = ceil (seconds / 60);
-        sprintf(arr, "%dmin", minutes);
+    if (seconds < 60) {sprintf(arr, "%dsec", seconds);
+    } else if (seconds < 3600) {minutes = ceil (seconds / 60); sprintf(arr, "%dmin", minutes);
     }else {
         hours = floor (seconds / 3600);
         minutes = ceil ((seconds%3600) / 60);
@@ -216,12 +209,12 @@ int gdPreview (char *file, int gdPrevWidth, int gdPrevArcRes, ncFlagsStruc *flag
 
 	int gdPrevXoffset = abs (gdPrevXmin) + gdPrevMargin; int gdPrevYoffset = abs (gdPrevYmin) + gdPrevMargin;
     int gdPrevWidthFull = gdPrevWidth + (gdPrevStrFontWidth + 10) * 2;
-    int gdPrevTxtLines = 6; if (linescount->tools > 0) {gdPrevTxtLines++;}
+    int gdPrevTxtLines = 6; if (linescount[0].tools > 0) {gdPrevTxtLines++;}
 
     gdImagePtr gdPrevImage = gdImageCreateTrueColor (gdPrevWidthFull, gdPrevHeight + gdPrevStrFontHeight * gdPrevTxtLines + 4);
 
     if (gdPrevImage != NULL) {
-        if (linescount->tools > 0) {gdPrevTxtLines--;}
+        if (linescount[0].tools > 0) {gdPrevTxtLines--;}
 
         //couleur gd : ok+opt
         int gdPrevColorBackground = gdImageColorAllocate (gdPrevImage, 0, 0, 0); //couleur du fond
@@ -274,7 +267,7 @@ int gdPreview (char *file, int gdPrevWidth, int gdPrevArcRes, ncFlagsStruc *flag
         
         //dessin tracees d'outils : ok+opt
         int line = 0, g;
-        if(linescount->tools > 0){
+        if(linescount[0].tools > 0){
             double toolDia = 1, /*toolAngle = 0, */dz = .0, lastdZ = .0;
             while (lines[line].g != -1) { //boucle de dessin outil
                 g = lines[line].g;

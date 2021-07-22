@@ -70,9 +70,11 @@ int NCparseFile (char *file, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStru
 
     unsigned int commentIndex = 0; //current comment index
     bool commentDetected = false; //comment detected in current line
+    int commentNameSize = (sizeof(ops[0].name) / sizeof(ops[0].name[0])) - 1;
+
     unsigned int toolNum = 0; //detected tool number
 
-    char *tmpPtr, *tmpPtr1; //temp pointers
+    char *tmpPtr, *tmpPtr1, *tmpPtr2; //temp pointers
     int tmpInt = 0; float tmpFloat = 0.; double tmpDouble = 0., tmpDouble1 = 0.; //temp vars
 
     bool CVblockSet = false;
@@ -173,9 +175,15 @@ int NCparseFile (char *file, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStru
                                 tools[toolNum].num = toolNum; tools[toolNum].diameter = tmpFloat;
                                 if(debugOutput){fprintf (ncFileDebugHandle, "DEBUG: CV: Simple tool detected : T:%i, dia:%f\n",tmpInt,tmpFloat);}
                             } else {
-                                if (ops[commentIndex].distWork > 0. && ops[commentIndex].distFast > 0. && commentIndex + 1 < arrSizes->distTimeStrucLimit) {commentIndex++;} //increment comment index number
-                                //TODO: implement UTF8 conversion here
-                                strncpy (ops[commentIndex].name, strTmpBuffer + (tmpPtr - &strBuffer[0]), 63); //backup comment
+                                if (!(Xfirst + Yfirst + Zfirst) && ops[commentIndex].distWork + ops[commentIndex].distFast > 0.001 && commentIndex + 1 < arrSizes->distTimeStrucLimit) {commentIndex++;} //increment comment index number
+                                
+                                //do some cleanup
+                                tmpPtr1 = strTmpBuffer + (tmpPtr - &strBuffer[0]) + 1; //start pointer
+                                if (*tmpPtr1 == ' ') {tmpPtr1++;} //trim leading space
+                                if (*tmpPtr == '(') {tmpPtr2 = strrchr(tmpPtr1, ')'); if (tmpPtr2 != NULL) {*tmpPtr2 = '\0';} //trim parentheses
+                                } else {tmpPtr2 = tmpPtr1 + strlen(tmpPtr1);} //pointer to last char
+                                if (*(tmpPtr2 - 1) == ' ') {*(tmpPtr2 - 1) = '\0';} //trim ending space
+                                strncpy (ops[commentIndex].name, tmpPtr1, commentNameSize); //backup comment
                             }
                         }
                         linescount[0].commented++;
@@ -273,7 +281,7 @@ int NCparseFile (char *file, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStru
                             arcOverLimits = false;
                             if ((Inew - Rnew) < limits[0].xMin || (Jnew - Rnew) < limits[0].yMin || (Inew + Rnew) > limits[0].xMax || (Jnew + Rnew) > limits[0].yMax) {arcOverLimits = true;} //opt
                             if (arcOverLimits) {
-                                arcLimits (GcircleLimits, Inew, Jnew, Rnew * 2, Rnew * 2, GangleStart, 360, 10);
+                                arcLimits (GcircleLimits, Inew, Jnew, Rnew * 2, Rnew * 2, GangleStart, 360, 1);
                                 if (GcircleLimits[0] < limits[0].xMin) {limits[0].xMin = GcircleLimits[0];}
                                 if (GcircleLimits[1] > limits[0].xMax) {limits[0].xMax = GcircleLimits[1];}
                                 if (GcircleLimits[2] < limits[0].yMin) {limits[0].yMin = GcircleLimits[2];}
@@ -289,7 +297,7 @@ int NCparseFile (char *file, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStru
                             arcOverLimits = false;
                             if ((Inew - Rnew) < limits[0].xMin || (Jnew - Rnew) < limits[0].yMin || (Inew + Rnew) > limits[0].xMax || (Jnew + Rnew) > limits[0].yMax) {arcOverLimits = true;} //opt
                             if (arcOverLimits) {
-                                arcLimits (GcircleLimits, Inew, Jnew, Rnew * 2, Rnew * 2, GangleStart, GangleEnd, 10);
+                                arcLimits (GcircleLimits, Inew, Jnew, Rnew * 2, Rnew * 2, GangleStart, GangleEnd, 1);
                                 if (GcircleLimits[0] < limits[0].xMin) {limits[0].xMin = GcircleLimits[0];}
                                 if (GcircleLimits[1] > limits[0].xMax) {limits[0].xMax = GcircleLimits[1];}
                                 if (GcircleLimits[2] < limits[0].yMin) {limits[0].yMin = GcircleLimits[2];}

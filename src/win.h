@@ -13,7 +13,7 @@ Windows specific.
 
 //funct
 bool CtrlHandler(DWORD); //handle ctrl-c on windows to avoid ansicon glitch that doesn't reset ansi code
-
+void UTF8toCP850 (char*, char*); //convert utf8 chars to CP850 for proper display 
 
 
 

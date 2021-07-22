@@ -131,6 +131,7 @@ int main (int argc, char *argv[]) {
             char timeArr [] = "000h 00min";
             char time1Arr [] = "000h 00min";
             double timeWork = ncLinesCount[0].totalTimeWork, timeFast = ncLinesCount[0].totalTimeFast, timeCircular = 0, timeDrill = 0;
+            char commentName [sizeof(ncDataTime[0].name) / sizeof(ncDataTime[0].name[0])] = {};
             //for (int i=0; i<100; i++) {if (ncDataTime[i].distWork > 0 && ncDataTime[i].distFast > 0){timeWork += ncDataTime[i].timeWork; timeFast += ncDataTime[i].timeFast;}}
 
             tmpPtr = strrchr(ncFilePath, '/');
@@ -161,7 +162,13 @@ int main (int argc, char *argv[]) {
             for (unsigned int i=0; i<ncCommentsLimit; i++) {
                 if (ncDataTime[i].distWork > 0 || ncDataTime[i].distFast > 0){
                     sec2charArr (timeArr, (ncDataTime[i].timeWork) * 60); sec2charArr (time1Arr, (ncDataTime[i].timeFast) * 60);
-                    printf (strMain[language][STR_MAIN::REPORT_L17], ncDataTime[i].name, timeArr, time1Arr);
+                    #if defined _WIN32
+                    UTF8toCP850 (ncDataTime[i].name, commentName);
+                    #else
+                    strcpy(commentName, ncDataTime[i].name);
+                    #endif
+                    printf (strMain[language][STR_MAIN::REPORT_L17A], commentName);
+                    printf (strMain[language][STR_MAIN::REPORT_L17B], timeArr, time1Arr);
                 }
             }
 
@@ -177,7 +184,13 @@ int main (int argc, char *argv[]) {
                 for (unsigned int i=0; i<ncCommentsLimit; i++) {
                     if (ncDataTime[i].distWork > 0 || ncDataTime[i].distFast > 0){
                         sec2charArr (timeArr, (ncDataTime[i].timeWork / ((double)speedPercent / 100)) * 60); sec2charArr (time1Arr, (ncDataTime[i].timeFast / ((double)speedPercent / 100)) * 60);
-                        printf (strMain[language][STR_MAIN::REPORT_L22], ncDataTime[i].name, timeArr, time1Arr);
+                        #if defined _WIN32
+                        UTF8toCP850 (ncDataTime[i].name, commentName);
+                        #else
+                        strcpy(commentName, ncDataTime[i].name);
+                        #endif
+                        printf (strMain[language][STR_MAIN::REPORT_L22A], commentName);
+                        printf (strMain[language][STR_MAIN::REPORT_L22B], timeArr, time1Arr);
                     }
                 }
             }
