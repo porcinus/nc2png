@@ -7,8 +7,14 @@ Uses [libGD](https://libgd.github.io/), [libpng](http://www.libpng.org/) and [zl
 Require zlib1g-dev, libpng-dev, libgd-dev to be installed on Linux in order to compile.
   
   
+#### Upcoming update:  
+- Proper UTF8 to CP850 comments conversion for Windows command (done).  
+- OpenGL preview with partial report, yet to be tested on a Linux OS (90% done).  
+- Better comments detection(done).  
+- Proper distance/time computation for drilling cycles (G81-83)(done).  
+  
+  
 #### Limitations (may be implemented in the future):  
-- UTF support.  
 - This code is not really optimized and a bit messy.  
 - Doesn't support axis accelerations.  
   
