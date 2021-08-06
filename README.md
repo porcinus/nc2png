@@ -9,9 +9,11 @@ Require zlib1g-dev, libpng-dev, libgd-dev to be installed on Linux in order to c
   
 #### Upcoming update:  
 - Proper UTF8 to CP850 comments conversion for Windows command (done).  
-- OpenGL preview with partial report, yet to be tested on a Linux OS (90% done).  
+- OpenGL preview with partial report, yet to be tested on a Linux OS (95% done).  
 - Better comments detection(done).  
 - Proper distance/time computation for drilling cycles (G81-83)(done).  
+- Configuration parsing/saving system reworked to allow more flexibility.  
+- Minor performance optimisations.  
   
   
 #### Limitations (may be implemented in the future):  
