@@ -1,5 +1,5 @@
 # nc2png  
-Generate preview and time estimations based on gcode file (milling), English and French localized.  
+Generate preview and time estimations based on gcode file (milling/fdm), English and French localized.  
    
 Based on a PHP script I made years ago to help me figure out time required to mill parts as well as toolpaths preview.  
   
