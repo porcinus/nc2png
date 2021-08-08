@@ -79,8 +79,8 @@ int main (int argc, char *argv[]) {
         chdir (programPath); //correct current program directory to avoid multiple config files
     }
 
-    char ncFilePath [PATH_MAX] = {'\0'}; //full path to nc file
-    char ncFilename [PATH_MAX] = {'\0'}; //nc file
+    char ncFilePath [PATH_MAX] = "";//{'\0'}; //full path to nc file
+    char ncFilename [PATH_MAX] = "";//{'\0'}; //nc file
 
     configParse ();
 	for(int i = 1; i < argc; ++i){ //argument to variable
@@ -91,14 +91,16 @@ int main (int argc, char *argv[]) {
         } else {sprintf (ncFilePath, "%s %s", ncFilePath, argv[i]);}
 	}
 
-
 /*if (strlen(ncFilePath) < 1) {
 strcpy (ncFilePath, "support vesa 5mm x3.nc"); //DEBUG GL
 }*/
 
     if (strlen(ncFilePath) > 0) {
         struct stat filestat;
-        if (ncFilePath [0] == ' ') {strcpy(ncFilePath, ncFilePath + 1);} //shift left
+        if (ncFilePath [0] == ' ') { //shift left if start by space
+            //strcpy(ncFilePath, ncFilePath + 1); //broken on linux 64bits for some CPU
+            memmove(ncFilePath, ncFilePath+1, strlen(ncFilePath)); //use memmove instead to shift char array
+        }
         stat(ncFilePath, &filestat);
         if (filestat.st_size > 0) {
             if(debug){fprintf(stderr,"DEBUG: %s found\n", ncFilePath);}
