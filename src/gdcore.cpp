@@ -181,7 +181,7 @@ int NNSPNGaddPPM (char *file, unsigned int ppm) { //write specific PPM to PNG fi
     return 0; //failed
 }
 
-int gdPreview (char *file, int gdPrevWidth, int gdPrevArcRes, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStruc *tools, ncDistTimeStruc *ops, ncLimitStruc *limits, ncLinesCountStruc *linescount, bool debugOutput) { //generate image preview off ncparser data
+int gdPreview (char *file, int gdPrevWidth, int gdPrevArcRes, /*ncFlagsStruc *flags, */ncLineStruc *lines, ncToolStruc *tools, ncDistTimeStruc *ops, ncLimitStruc *limits, ncLinesCountStruc *linescount, bool debugOutput) { //generate image preview off ncparser data
     FILE *gdFileHandle; //file handle
 
     char previewFilePath [PATH_MAX]; //full path to nc file
@@ -194,10 +194,10 @@ int gdPreview (char *file, int gdPrevWidth, int gdPrevArcRes, ncFlagsStruc *flag
 
     double gdPrevScale = 1.;
 
-    if (0. > limits[0].xMin) {gdPrevXmin = limits[0].xMin;}
-    if (0. < limits[0].xMax) {gdPrevXmax = limits[0].xMax;}
-    if (0. > limits[0].yMin) {gdPrevYmin = limits[0].yMin;}
-    if (0. < limits[0].yMax) {gdPrevYmax = limits[0].yMax;}
+    if (0. > limits->xMin) {gdPrevXmin = limits->xMin;}
+    if (0. < limits->xMax) {gdPrevXmax = limits->xMax;}
+    if (0. > limits->yMin) {gdPrevYmin = limits->yMin;}
+    if (0. < limits->yMax) {gdPrevYmax = limits->yMax;}
 
     if (abs (gdPrevXmax - gdPrevXmin) > abs (gdPrevYmax - gdPrevYmin)) { //compute height, width > height
         gdPrevHeight = gdPrevWidth / (double)((abs (gdPrevXmax - gdPrevXmin) + gdPrevMargin * 2) / (double)(abs (gdPrevYmax - gdPrevYmin) + gdPrevMargin * 2));
@@ -209,12 +209,12 @@ int gdPreview (char *file, int gdPrevWidth, int gdPrevArcRes, ncFlagsStruc *flag
 
 	int gdPrevXoffset = abs (gdPrevXmin) + gdPrevMargin; int gdPrevYoffset = abs (gdPrevYmin) + gdPrevMargin;
     int gdPrevWidthFull = gdPrevWidth + (gdPrevStrFontWidth + 10) * 2;
-    int gdPrevTxtLines = 6; if (linescount[0].tools > 0) {gdPrevTxtLines++;}
+    int gdPrevTxtLines = 6; if (linescount->tools > 0) {gdPrevTxtLines++;}
 
     gdImagePtr gdPrevImage = gdImageCreateTrueColor (gdPrevWidthFull, gdPrevHeight + gdPrevStrFontHeight * gdPrevTxtLines + 4);
 
     if (gdPrevImage != NULL) {
-        if (linescount[0].tools > 0) {gdPrevTxtLines--;}
+        if (linescount->tools > 0) {gdPrevTxtLines--;}
 
         //couleur gd : ok+opt
         int gdPrevColorBackground = gdImageColorAllocate (gdPrevImage, 0, 0, 0); //couleur du fond
@@ -255,10 +255,10 @@ int gdPreview (char *file, int gdPrevWidth, int gdPrevArcRes, ncFlagsStruc *flag
         for(double gdPrevY1=gdPrevOrigY;gdPrevY1>0;gdPrevY1-=gdPrevGrid_scaled){gdImageLine(gdPrevImage,0,gdPrevY1,gdPrevWidth,gdPrevY1,gdPrevColorGrid);} //boucle dessin grille x-
         
         //rectangle pointille des limites : ok+opt
-        int gdPrevXminPx = (limits[0].xMin + gdPrevXoffset)*gdPrevScale;
-        int gdPrevXmaxPx = (limits[0].xMax + gdPrevXoffset)*gdPrevScale;
-        int gdPrevYminPx = gdPrevHeight-(limits[0].yMin + gdPrevYoffset)*gdPrevScale;
-        int gdPrevYmaxPx = gdPrevHeight-(limits[0].yMax + gdPrevYoffset)*gdPrevScale;
+        int gdPrevXminPx = (limits->xMin + gdPrevXoffset)*gdPrevScale;
+        int gdPrevXmaxPx = (limits->xMax + gdPrevXoffset)*gdPrevScale;
+        int gdPrevYminPx = gdPrevHeight-(limits->yMin + gdPrevYoffset)*gdPrevScale;
+        int gdPrevYmaxPx = gdPrevHeight-(limits->yMax + gdPrevYoffset)*gdPrevScale;
 
         NNSgdImageLineDashed(gdPrevImage,gdPrevXminPx,gdPrevYmaxPx,gdPrevXminPx,gdPrevHeight,gdPrevColorLimitsLines,gdTransparent,4);
         NNSgdImageLineDashed(gdPrevImage,gdPrevXmaxPx,gdPrevYmaxPx,gdPrevXmaxPx,gdPrevHeight,gdPrevColorLimitsLines,gdTransparent,4);
@@ -267,13 +267,13 @@ int gdPreview (char *file, int gdPrevWidth, int gdPrevArcRes, ncFlagsStruc *flag
         
         //dessin tracees d'outils : ok+opt
         int line = 0, g;
-        if(linescount[0].tools > 0){
+        if(linescount->tools > 0){
             double toolDia = 1, /*toolAngle = 0, */dz = .0, lastdZ = .0;
             while (lines[line].g != -1) { //boucle de dessin outil
                 g = lines[line].g;
                 if (lines[line].tool != -1 && line != 0){
                     toolDia = tools[lines[line].tool].diameter * gdPrevScale;
-                    if (numDiffDouble(limits[0].zMaxWork, limits[0].zMinWork) > 0.01) {gdPrevColorTool = NNSgdImageColorAllocateFade(gdPrevImage, gdPrevColorToolLowerArr, gdPrevColorToolHigherArr, (lines[line].z - limits[0].zMinWork) / (limits[0].zMaxWork - limits[0].zMinWork));
+                    if (numDiffDouble(limits->zMaxWork, limits->zMinWork) > 0.01) {gdPrevColorTool = NNSgdImageColorAllocateFade(gdPrevImage, gdPrevColorToolLowerArr, gdPrevColorToolHigherArr, (lines[line].z - limits->zMinWork) / (limits->zMaxWork - limits->zMinWork));
                     } else {gdPrevColorTool = gdImageColorAllocate (gdPrevImage, gdPrevColorToolLowerArr[0], gdPrevColorToolLowerArr[1], gdPrevColorToolLowerArr[2]);}
                     
                     if (tools[lines[line].tool].angle <= 0.01) {
@@ -371,10 +371,10 @@ int gdPreview (char *file, int gdPrevWidth, int gdPrevArcRes, ncFlagsStruc *flag
 
         //temps : ok
         char gdPrevStrTime [1024], gdPrevStrTimePercent [512];
-        sec2charArr (gdPrevStrTimePercent, (linescount[0].totalTimeWork + linescount[0].totalTimeFast) * 60); 
+        sec2charArr (gdPrevStrTimePercent, (linescount->totalTimeWork + linescount->totalTimeFast) * 60); 
         sprintf (gdPrevStrTime, "%s : %s", strGD[language][STR_GD::DURATION], gdPrevStrTimePercent);
         if (speedPercent != 100) {
-            sec2charArr (gdPrevStrTimePercent, ((linescount[0].totalTimeWork + linescount[0].totalTimeFast) * 60) / ((double)speedPercent / 100)); 
+            sec2charArr (gdPrevStrTimePercent, ((linescount->totalTimeWork + linescount->totalTimeFast) * 60) / ((double)speedPercent / 100)); 
             sprintf (gdPrevStrTime, "%s, %s %d%%: %s", gdPrevStrTime, strGD[language][STR_GD::FEED], speedPercent, gdPrevStrTimePercent);
         }
         gdPrevStrWidth = strlen(gdPrevStrTime) * gdPrevStrFontWidth; gdPrevStrX = (gdPrevWidthFull - gdPrevStrWidth) / 2;
@@ -384,22 +384,22 @@ int gdPreview (char *file, int gdPrevWidth, int gdPrevArcRes, ncFlagsStruc *flag
         //limites
         //X min
         char gdPrevStrXmin [14];
-        sprintf (gdPrevStrXmin, " %.2lfmm ", limits[0].xMin);
+        sprintf (gdPrevStrXmin, " %.2lfmm ", limits->xMin);
         NNSgdImageArrow(gdPrevImage,gdPrevXminPx,gdPrevHeight+gdPrevStrFontHeight-1,gdPrevStrFontHeight,6,6,3,gdPrevColorLimits,true);
         gdImageString(gdPrevImage,gdFontSmall,gdPrevXminPx+2,gdPrevHeight,(unsigned char*) gdPrevStrXmin,gdPrevColorLimits);
         gdImageLine(gdPrevImage,gdPrevXminPx+1,gdPrevHeight+gdPrevStrFontHeight,gdPrevXminPx+strlen(gdPrevStrXmin)*gdPrevStrFontWidth,gdPrevHeight+gdPrevStrFontHeight,gdPrevColorLimits);
 
         //X max
         char gdPrevStrXmax [14];
-        sprintf (gdPrevStrXmax, " %.2lfmm ", limits[0].xMax);
+        sprintf (gdPrevStrXmax, " %.2lfmm ", limits->xMax);
         NNSgdImageArrow(gdPrevImage,gdPrevXmaxPx,gdPrevHeight+gdPrevStrFontHeight-1,gdPrevStrFontHeight,6,6,3,gdPrevColorLimits,true);
         gdImageString(gdPrevImage,gdFontSmall,gdPrevXmaxPx-strlen(gdPrevStrXmax)*gdPrevStrFontWidth,gdPrevHeight,(unsigned char*) gdPrevStrXmax,gdPrevColorLimits);
         gdImageLine(gdPrevImage,gdPrevXmaxPx-1,gdPrevHeight+gdPrevStrFontHeight,gdPrevXmaxPx-strlen(gdPrevStrXmax)*gdPrevStrFontWidth,gdPrevHeight+gdPrevStrFontHeight,gdPrevColorLimits);
                 
         //X total
         char gdPrevStrXfull [14];
-        sprintf (gdPrevStrXfull, " %.2lfmm ", limits[0].xMax - limits[0].xMin);
-        if(numDiffDouble (limits[0].xMin, limits[0].xMax) > 0.001){
+        sprintf (gdPrevStrXfull, " %.2lfmm ", limits->xMax - limits->xMin);
+        if(numDiffDouble (limits->xMin, limits->xMax) > 0.001){
             NNSgdImageArrow(gdPrevImage,gdPrevXminPx,gdPrevHeight+gdPrevStrFontHeight*2,gdPrevStrFontHeight,6,6,3,gdPrevColorLimits,true);
             NNSgdImageArrow(gdPrevImage,gdPrevXmaxPx,gdPrevHeight+gdPrevStrFontHeight*2,gdPrevStrFontHeight,6,6,3,gdPrevColorLimits,true);
             gdImageLine(gdPrevImage,gdPrevXminPx+1,gdPrevHeight+gdPrevStrFontHeight*2,gdPrevXmaxPx-1,gdPrevHeight+gdPrevStrFontHeight*2,gdPrevColorLimits);
@@ -408,22 +408,22 @@ int gdPreview (char *file, int gdPrevWidth, int gdPrevArcRes, ncFlagsStruc *flag
 
         //Y min
         char gdPrevStrYmin [14];
-        sprintf (gdPrevStrYmin, " %.2lfmm ", limits[0].yMin);
+        sprintf (gdPrevStrYmin, " %.2lfmm ", limits->yMin);
         NNSgdImageArrow(gdPrevImage,gdPrevWidth+gdPrevStrFontHeight-1,gdPrevYminPx,gdPrevStrFontHeight,6,6,1,gdPrevColorLimits,true);
         gdImageStringUp(gdPrevImage,gdFontSmall,gdPrevWidth,gdPrevYminPx-2,(unsigned char*) gdPrevStrYmin,gdPrevColorLimits);
         gdImageLine(gdPrevImage,gdPrevWidth+gdPrevStrFontHeight,gdPrevYminPx-1,gdPrevWidth+gdPrevStrFontHeight,gdPrevYminPx-strlen(gdPrevStrYmin)*gdPrevStrFontWidth,gdPrevColorLimits);
 
         //Y max
         char gdPrevStrYmax [14];
-        sprintf (gdPrevStrYmax, " %.2lfmm ", limits[0].yMax);
+        sprintf (gdPrevStrYmax, " %.2lfmm ", limits->yMax);
         NNSgdImageArrow(gdPrevImage,gdPrevWidth+gdPrevStrFontHeight-1,gdPrevYmaxPx,gdPrevStrFontHeight,6,6,1,gdPrevColorLimits,true);
         gdImageStringUp(gdPrevImage,gdFontSmall,gdPrevWidth,gdPrevYmaxPx+strlen(gdPrevStrYmax)*gdPrevStrFontWidth,(unsigned char*) gdPrevStrYmax,gdPrevColorLimits);
         gdImageLine(gdPrevImage,gdPrevWidth+gdPrevStrFontHeight,gdPrevYmaxPx+1,gdPrevWidth+gdPrevStrFontHeight,gdPrevYmaxPx+strlen(gdPrevStrYmax)*gdPrevStrFontWidth,gdPrevColorLimits);
 
         //Y total
         char gdPrevStrYfull [14];
-        sprintf (gdPrevStrYfull, " %.2lfmm ", limits[0].yMax - limits[0].yMin);
-        if(numDiffDouble (limits[0].yMin, limits[0].yMax) > 0.001){
+        sprintf (gdPrevStrYfull, " %.2lfmm ", limits->yMax - limits->yMin);
+        if(numDiffDouble (limits->yMin, limits->yMax) > 0.001){
             NNSgdImageArrow(gdPrevImage,gdPrevWidth+gdPrevStrFontHeight*2,gdPrevYminPx,gdPrevStrFontHeight,6,6,1,gdPrevColorLimits,true);
             NNSgdImageArrow(gdPrevImage,gdPrevWidth+gdPrevStrFontHeight*2,gdPrevYmaxPx,gdPrevStrFontHeight,6,6,1,gdPrevColorLimits,true);
             gdImageLine(gdPrevImage,gdPrevWidth+gdPrevStrFontHeight*2,gdPrevYminPx-1,gdPrevWidth+gdPrevStrFontHeight*2,gdPrevYmaxPx+1,gdPrevColorLimits);
@@ -432,7 +432,7 @@ int gdPreview (char *file, int gdPrevWidth, int gdPrevArcRes, ncFlagsStruc *flag
 
         //Z
         char gdPrevStrZ [100];
-        sprintf (gdPrevStrZ, "Z min : %.2lfmm <> Z max : %.2lfmm", limits[0].zMin, limits[0].zMax);
+        sprintf (gdPrevStrZ, "Z min : %.2lfmm <> Z max : %.2lfmm", limits->zMin, limits->zMax);
         gdPrevStrWidth = strlen(gdPrevStrZ) * gdPrevStrFontWidth; gdPrevStrX = (gdPrevWidthFull - gdPrevStrWidth) / 2;
         gdImageString(gdPrevImage,gdFontSmall,gdPrevStrX ,gdPrevHeight+gdPrevStrFontHeight*(gdPrevTxtLines-3),(unsigned char*) gdPrevStrZ,gdPrevColorLimits);
         gdImageLine(gdPrevImage,gdPrevStrX,gdPrevHeight+gdPrevStrFontHeight*(gdPrevTxtLines-2),gdPrevStrX + gdPrevStrWidth ,gdPrevHeight+gdPrevStrFontHeight*(gdPrevTxtLines-2),gdPrevColorLimits);

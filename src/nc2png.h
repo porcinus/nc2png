@@ -8,7 +8,7 @@ Main file
 #ifndef NC2PNG_H
 #define NC2PNG_H
 
-char programversion[]="0.2a"; //program version
+char programversion[]="0.3a"; //program version
 
 #include <cstring>
 #include <fcntl.h>
@@ -27,11 +27,7 @@ extern "C" {
 #if defined __linux__
     bool termColor = true;
 #elif defined __APPLE__
-    bool termColor = true;/*
-#elif defined _WIN32
-    bool termColor = false;
-#elif defined __CYGWIN__
-    bool termColor = false;*/
+    bool termColor = true;
 #else
     bool termColor = false;
 #endif
@@ -40,6 +36,7 @@ extern "C" {
 enum STR_MAIN {
 USAGE_EXAMPLE,USAGE_OPTIONAL,USAGE_NEWCFG,USAGE_DELCFG,USAGE_DEFAULTREG,USAGE_DEBUG,USAGE_LIBRARIES,
 ANSICON_MODULE,ANSICON_NEEDED,
+NC_NOCOMMENT,
 REPORT_L01,REPORT_L02,REPORT_L03,REPORT_L04,REPORT_L05,REPORT_L06,REPORT_L07,REPORT_L08,REPORT_L09,REPORT_L10,
 REPORT_L11,REPORT_L12,REPORT_L13,REPORT_L14,REPORT_L15,REPORT_L16,REPORT_L17A,REPORT_L17B,REPORT_L18,REPORT_L19,REPORT_L20,
 REPORT_L21,REPORT_L22A,REPORT_L22B,REPORT_L23,REPORT_L24,REPORT_L25,REPORT_L26,REPORT_L27,REPORT_L28,REPORT_L29,REPORT_L30,
@@ -59,6 +56,8 @@ const char *strMainEN [] = {
 
 /*ANSICON_MODULE*/ "This program require ANSICON to be installed and its module running",
 /*ANSICON_NEEDED*/ "This program needs a ANSI compatible terminal to run",
+
+/*NC_NOCOMMENT*/ "Program",
 
 /*REPORT_L01*/ "Rapport pour le fichier '\033[1;33m%s\033[0m':\n",
 /*REPORT_L02*/ "	Max XY speed :     \033[1;33m%d\033[0mmm/min\n",
@@ -120,6 +119,8 @@ const char *strMainFR [] = {
 /*ANSICON_MODULE*/ "Ce programme necessite l'installation de ANSICON et son module soit fonctionnel",
 /*ANSICON_NEEDED*/ "Ce programme necessite un terminal compatible ANSI",
 
+/*NC_NOCOMMENT*/ "Programme",
+
 /*REPORT_L01*/ "Rapport pour le fichier '\033[1;33m%s\033[0m':\n",
 /*REPORT_L02*/ "	Vitesse maximum des axes X et Y :     \033[1;33m%d\033[0mmm/min\n",
 /*REPORT_L03*/ "	Vitesse maximum de l'axe Z :          \033[1;33m%d\033[0mmm/min\n",
@@ -176,14 +177,18 @@ extern int checkAnsiconExists (void); //search thru PATH for ansicon
 extern int checkAnsiconModule (void); //search thru current process for ansicon module loaded
 
 //config.h
-extern bool configSave (bool); //save config file
+extern bool configSave (bool, bool=false); //save config file
 extern void configParse (void); //parse/create program config file
 extern void configEdit (bool); //edit config file
 extern void configManu (void); //onfly config edit without save
 
 //gdcore.h
 extern void sec2charArr (char*, double); //convert seconds to char array in format : XXsec / XXmin / XXh XXmin
-extern int gdPreview (char*, int, int, ncFlagsStruc*, ncLineStruc*, ncToolStruc*, ncDistTimeStruc*, ncLimitStruc*, ncLinesCountStruc*, bool); //generate image preview off ncparser data
+extern int gdPreview (char*, int, int, /*ncFlagsStruc*, */ncLineStruc*, ncToolStruc*, ncDistTimeStruc*, ncLimitStruc*, ncLinesCountStruc*, bool); //generate image preview off ncparser data
+
+//glcore.h
+extern unsigned int glViewportEnable;
+extern int glPreview (ncLineStruc*, ncToolStruc*, ncDistTimeStruc*, ncLimitStruc*, ncLinesCountStruc*, ncArraySize*, bool);
 
 //lang.h
 extern unsigned int getLocale (void); //get system locale id
@@ -199,5 +204,10 @@ unsigned int ncCommentsLimit = 100; //comments array limit
 unsigned int ncToolsLimit = 100; //tools array limit
 bool shouldRunAnsicon = false; //used to avoid run loop if ansicon not installed in windows, NO NOT EDIT
 unsigned int language = 0; //language id
+char libGDver[] = GD_VERSION_STRING;
+char libPNGver[] = PNG_LIBPNG_VER_STRING;
+char zlibver[] = ZLIB_VERSION;
+
+
 
 #endif

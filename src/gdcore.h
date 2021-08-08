@@ -61,7 +61,7 @@ void NNSgdImageArrow (gdImagePtr, int, int, int, int, int, int, int, bool); //dr
 void NNSgdImageArc (gdImagePtr, int, int, int, int, int, int, int, int); //draw arc, allow precision definition, GD one draw one line per degree
 void sec2charArr (char*, double); //convert seconds to char array in format : XXsec / XXmin / XXh XXmin
 int NNSPNGaddPPM (char*, unsigned int); //write specific PPM to PNG file, can be done via libpng but it is faster that way
-int gdPreview (char*, int, int, ncFlagsStruc*, ncLineStruc*, ncToolStruc*, ncDistTimeStruc*, ncLimitStruc*, ncLinesCountStruc*, bool); //generate image preview off ncparser data
+int gdPreview (char*, int, int, /*ncFlagsStruc*, */ncLineStruc*, ncToolStruc*, ncDistTimeStruc*, ncLimitStruc*, ncLinesCountStruc*, bool); //generate image preview off ncparser data
 
 //ncparser.h
 extern double deg2rad (double); //convert degree to radian

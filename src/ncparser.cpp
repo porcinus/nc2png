@@ -94,13 +94,15 @@ int NCparseFile (char *file, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStru
     int GflagRemain = 5; //remaining G flags to be defined
 
     unsigned int arrLine = -1; //current line index (array)
-    int GcompatibleArr[] = {0,1,2,3,80,81,82,83}; //current compatible gcode
+    int GcompatibleArr[] = {0,1,2,3,80,81,82,83,98}; //current compatible gcode
 
     //G2-3 specific
     int GangleDir = 1; //G2-3 angle direction
     double Gangle = 0, GangleStart = 0, GangleEnd = 0; //angles for gd
     double GcircleLimits [] = {0,0,0,0};
     bool arcOverLimits = false;
+
+    int retractMode = 0; double Zinit = 0; //drill specific
 
     ncFileHandle = fopen(file, "r"); //file stream
     if (ncFileHandle != NULL) { //valid file stream
@@ -134,24 +136,24 @@ int NCparseFile (char *file, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStru
                         Gnew = atoi (tmpPtr + 1); //backup code
                         if (GflagRemain != 0) { //some flags are not declared
                             if (GflagUnit == -1 && (Gnew == 20 || Gnew == 21)) { //G20:inch, G21:mm
-                                GflagUnit = Gnew; flags[0].unit = Gnew; GflagRemain--; Gnew = -1;
+                                GflagUnit = Gnew; flags->unit = Gnew; GflagRemain--; Gnew = -1;
                                 if(debugOutput){fprintf (ncFileDebugHandle, "DEBUG: Flag:unit:%i\n",GflagUnit);}
                             } else if (GflagPlane == -1 && (Gnew == 17 || Gnew == 18 || Gnew == 19)) { //G17:XY, G18:ZX, G19:YZ
-                                GflagPlane = Gnew; flags[0].workplane = Gnew; GflagRemain--; Gnew = -1;
+                                GflagPlane = Gnew; flags->workplane = Gnew; GflagRemain--; Gnew = -1;
                                 if(debugOutput){fprintf (ncFileDebugHandle, "DEBUG: Flag:plane:%i\n",GflagPlane);}
                             } else if (GflagComp == -1 && (Gnew == 40 || Gnew == 41 || Gnew == 42)) { //G40:none, G41:left, G42:right
-                                GflagComp = Gnew; flags[0].compensation = Gnew; GflagRemain--; Gnew = -1;
+                                GflagComp = Gnew; flags->compensation = Gnew; GflagRemain--; Gnew = -1;
                                 if(debugOutput){fprintf (ncFileDebugHandle, "DEBUG: Flag:comp:%i\n",GflagComp);}
                             } else if (GflagCircular == -1 && strchr(tmpPtr + 1, '.') != NULL && (Gnew == 90 || Gnew == 91)) { //circular: G90.1:absolute, G91.1:relative
-                                GflagCircular = Gnew; flags[0].circular = Gnew; GflagRemain--; Gnew = -1;
+                                GflagCircular = Gnew; flags->circular = Gnew; GflagRemain--; Gnew = -1;
                                 if(debugOutput){fprintf (ncFileDebugHandle, "DEBUG: Flag:circular:%i\n",GflagCircular);}
                             } else if (GflagCoord == -1 && (Gnew == 90 || Gnew == 91)) { //linear: G90:absolute, G91:relative
-                                GflagCoord = Gnew; flags[0].coord = Gnew; GflagRemain--; Gnew = -1;
+                                GflagCoord = Gnew; flags->coord = Gnew; GflagRemain--; Gnew = -1;
                                 if(debugOutput){fprintf (ncFileDebugHandle, "DEBUG: Flag:linear:%i\n",GflagCoord);}
                             }
                         }
 
-                        if (!inArrayInt (GcompatibleArr, Gnew, 8)) {Gnew = -1; //invalid g function
+                        if (!inArrayInt (GcompatibleArr, Gnew, 9)) {Gnew = -1; //invalid g function
                         } else {
                             if (Gnew == 2 || Gnew == 3) {Inew = Jnew = Knew = Rnew = 0.; // //reset i,j,k,r if circular
                             } else if (Gnew >= 80 && Gnew < 83) {Qnew = Rnew = 0.;} //reset q,r if drill
@@ -161,12 +163,12 @@ int NCparseFile (char *file, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStru
                             sscanf (strTmpBuffer, "( tool/mill,%f,%f,%f,%f )", &tools[toolNum].diameter, &tools[toolNum].radius, &tools[toolNum].length, &tools[toolNum].angle);
                             if(debugOutput){fprintf (ncFileDebugHandle, "DEBUG: CV: Tool detected : T:%d, dia:%f, rad:%f, len:%f, ang:%f\n",toolNum,tools[toolNum].diameter,tools[toolNum].radius,tools[toolNum].length,tools[toolNum].angle);}
                         } else if (strstr (strTmpBuffer,"stock/block") != NULL) { //cutview block detection block: {$comment} STOCK/BLOCK,{$stock_width},{$stock_length},{$stock_height},{$stock_x},{$stock_y},{$stock_z} {$endcomment}
-                            sscanf (strTmpBuffer, "( stock/block,%lf,%lf,%lf,%lf,%lf,%lf )", &(limits[0].xMax), &(limits[0].yMax), &(limits[0].zMax), &(limits[0].xMin), &(limits[0].yMin), &(limits[0].zMin));
-                            limits[0].xMax = limits[0].xMin + limits[0].xMax;
-                            limits[0].yMax = limits[0].yMin + limits[0].yMax;
-                            limits[0].zMax = limits[0].zMin + limits[0].zMax;
-                            if(debugOutput){fprintf (ncFileDebugHandle, "DEBUG: CV: Stock detected : X-:%f X+:%f Y-:%f Y+:%f Z-:%f Z+:%f\n",limits[0].xMin,limits[0].xMax,limits[0].yMin,limits[0].yMax,limits[0].zMin,limits[0].zMax);}
-                            if (abs (0 - (limits[0].xMax + limits[0].yMax + limits[0].zMax + limits[0].xMin + limits[0].yMin + limits[0].zMin)) > 0.) {
+                            sscanf (strTmpBuffer, "( stock/block,%lf,%lf,%lf,%lf,%lf,%lf )", &(limits->xMax), &(limits->yMax), &(limits->zMax), &(limits->xMin), &(limits->yMin), &(limits->zMin));
+                            limits->xMax = limits->xMin + limits->xMax;
+                            limits->yMax = limits->yMin + limits->yMax;
+                            limits->zMax = limits->zMin + limits->zMax;
+                            if(debugOutput){fprintf (ncFileDebugHandle, "DEBUG: CV: Stock detected : X-:%f X+:%f Y-:%f Y+:%f Z-:%f Z+:%f\n",limits->xMin,limits->xMax,limits->yMin,limits->yMax,limits->zMin,limits->zMax);}
+                            if (abs (0 - (limits->xMax + limits->yMax + limits->zMax + limits->xMin + limits->yMin + limits->zMin)) > 0.) {
                                 CVblockSet = true; if(debugOutput){fprintf (ncFileDebugHandle, "DEBUG: CV: valid stock\n");}
                             } else {if(debugOutput){fprintf (ncFileDebugHandle, "DEBUG: CV: invalid stock\n");}}
                         } else {
@@ -186,7 +188,7 @@ int NCparseFile (char *file, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStru
                                 strncpy (ops[commentIndex].name, tmpPtr1, commentNameSize); //backup comment
                             }
                         }
-                        linescount[0].commented++;
+                        linescount->commented++;
                         commentDetected = true;
                     } else if (*tmpPtr == 't') { //tool change
                         toolNum = atoi (tmpPtr + 1);
@@ -200,17 +202,17 @@ int NCparseFile (char *file, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStru
                             Fnew = tmpInt;
                         } else if (*tmpPtr == 'x') { //x
                             if (GflagCoord==91) {Xnew = Xlast + tmpDouble;} else {Xnew = tmpDouble;} //convert from relative to absolute if needed
-                            if (Xfirst) {if (!CVblockSet) {limits[0].xMin = Xnew; limits[0].xMax = Xnew;} Xfirst = false;}
-                            if (Xnew < limits[0].xMin) {limits[0].xMin = Xnew;} if (Xnew > limits[0].xMax) {limits[0].xMax = Xnew;}
+                            if (Xfirst) {if (!CVblockSet) {limits->xMin = Xnew; limits->xMax = Xnew;} Xfirst = false;}
+                            if (Xnew < limits->xMin) {limits->xMin = Xnew;} if (Xnew > limits->xMax) {limits->xMax = Xnew;}
                         } else if (*tmpPtr == 'y') { //y
                             if (GflagCoord==91) {Ynew = Ylast + tmpDouble;} else {Ynew = tmpDouble;} //convert from relative to absolute if needed
-                            if (Yfirst) {if (!CVblockSet) {limits[0].yMin = Ynew; limits[0].yMax = Ynew;} Yfirst = false;}
-                            if (Ynew < limits[0].yMin) {limits[0].yMin = Ynew;} if (Ynew > limits[0].yMax) {limits[0].yMax = Ynew;}
+                            if (Yfirst) {if (!CVblockSet) {limits->yMin = Ynew; limits->yMax = Ynew;} Yfirst = false;}
+                            if (Ynew < limits->yMin) {limits->yMin = Ynew;} if (Ynew > limits->yMax) {limits->yMax = Ynew;}
                         } else if (*tmpPtr == 'z') { //z
                             if (GflagCoord==91) {Znew = Zlast + tmpDouble;} else {Znew = tmpDouble;} //convert from relative to absolute if needed
-                            if (Zfirst) {if (!CVblockSet) {limits[0].zMin = Znew; limits[0].zMax = Znew;} Zfirst = false;}
-                            if (Znew < limits[0].zMin) {limits[0].zMin = Znew; if (Gnew != 0) {limits[0].zMinWork = Znew;}}
-                            if (Znew > limits[0].zMax) {limits[0].zMax = Znew; if (Gnew != 0) {limits[0].zMaxWork = Znew;}}
+                            if (Zfirst) {if (!CVblockSet) {limits->zMin = Znew; limits->zMax = Znew;} Zfirst = false;}
+                            if (Znew < limits->zMin) {limits->zMin = Znew; if (Gnew != 0) {limits->zMinWork = Znew;}}
+                            if (Znew > limits->zMax) {limits->zMax = Znew; if (Gnew != 0) {limits->zMaxWork = Znew;}}
                         } else if (*tmpPtr == 'i') { //circular: x center
                             if (GflagCircular==91) {Inew = Xlast + tmpDouble;} else {Inew = tmpDouble;} //convert from relative to absolute if needed
                             InewSet = true;
@@ -228,11 +230,13 @@ int NCparseFile (char *file, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStru
             }
 
             if (Gnew != -1) { //valid G function detected in current line
-                if (Gnew == 80) {Qnew = Rnew = 0;} //cancel drill operations
-
                 if (arrLine + 1 < arrSizes->lineStrucLimit) {arrLine++;}
+                if (Gnew == 80) {Qnew = Rnew = retractMode = 0;} //cancel drill operations
+                if (Gnew == 98) {retractMode = 1; Zinit = Znew;} //drill: retract to initial z
+
                 lines[arrLine].g = Gnew;
                 lines[arrLine].tool = toolNum;
+                lines[arrLine].comment = commentIndex;
                 if (Gnew == 0) {lines[arrLine].f = Ffast;} else {lines[arrLine].f = Fnew;}
                 lines[arrLine].x = Xnew; lines[arrLine].y = Ynew; lines[arrLine].z = Znew;
                 lines[arrLine].i = Inew; lines[arrLine].j = Jnew; lines[arrLine].k = Knew;
@@ -247,14 +251,14 @@ int NCparseFile (char *file, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStru
                 tmpTravelZ = numDiffDouble(Zlast, Znew); //compute distance traveled in z
 
                 if (Gnew == 0 || Gnew == 1) { //linear
-                    if (Gnew == 1) {linescount[0].g1++;} else {linescount[0].g0++;} //increment line count
+                    if (Gnew == 1) {linescount->g1++;} else {linescount->g0++;} //increment line count
                     if (tmpTravelX > 0.001 && tmpTravelY < 0.001) {tmpTravel = tmpTravelX; //only moved in x
                     } else if (tmpTravelX < 0.001 && tmpTravelY > 0.001) {tmpTravel = tmpTravelY; //only moved in y
                     } else if (tmpTravelX > 0.001 && tmpTravelY > 0.001) {tmpTravel = sqrt(tmpTravelX*tmpTravelX + tmpTravelY*tmpTravelY);} // moved both x y
                     if (tmpTravel > 0.001 && tmpTravelZ > 0.001) {tmpTravel = sqrt(tmpTravel*tmpTravel + tmpTravelZ*tmpTravelZ); //moved in x/y and z as well
                     } else if (tmpTravel < 0.001 && tmpTravelZ > 0.001) {tmpTravel = tmpTravelZ;} //only moved in z
                 } else if (Gnew == 2 || Gnew == 3) { //circular
-                    if (Gnew == 2) {linescount[0].g2++; GangleDir = 1;} else {linescount[0].g3++; GangleDir = -1;} //increment line count and set angle direction
+                    if (Gnew == 2) {linescount->g2++; GangleDir = 1;} else {linescount->g3++; GangleDir = -1;} //increment line count and set angle direction
                     if (InewSet && JnewSet && (tmpTravelX > 0.001 || tmpTravelY > 0.001 || tmpTravelZ > 0.001)) {
                         tmpDouble = numDiffDouble(Inew, Xnew); tmpDouble1 = numDiffDouble(Jnew, Ynew);
                         Rnew = abs(sqrt (tmpDouble*tmpDouble + tmpDouble1*tmpDouble1));
@@ -279,13 +283,13 @@ int NCparseFile (char *file, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStru
 
                         if (GangleStart + Gangle > 359.99 || GangleStart > GangleEnd) {
                             arcOverLimits = false;
-                            if ((Inew - Rnew) < limits[0].xMin || (Jnew - Rnew) < limits[0].yMin || (Inew + Rnew) > limits[0].xMax || (Jnew + Rnew) > limits[0].yMax) {arcOverLimits = true;} //opt
+                            if ((Inew - Rnew) < limits->xMin || (Jnew - Rnew) < limits->yMin || (Inew + Rnew) > limits->xMax || (Jnew + Rnew) > limits->yMax) {arcOverLimits = true;} //opt
                             if (arcOverLimits) {
                                 arcLimits (GcircleLimits, Inew, Jnew, Rnew * 2, Rnew * 2, GangleStart, 360, 1);
-                                if (GcircleLimits[0] < limits[0].xMin) {limits[0].xMin = GcircleLimits[0];}
-                                if (GcircleLimits[1] > limits[0].xMax) {limits[0].xMax = GcircleLimits[1];}
-                                if (GcircleLimits[2] < limits[0].yMin) {limits[0].yMin = GcircleLimits[2];}
-                                if (GcircleLimits[3] > limits[0].yMax) {limits[0].yMax = GcircleLimits[3];}
+                                if (GcircleLimits[0] < limits->xMin) {limits->xMin = GcircleLimits[0];}
+                                if (GcircleLimits[1] > limits->xMax) {limits->xMax = GcircleLimits[1];}
+                                if (GcircleLimits[2] < limits->yMin) {limits->yMin = GcircleLimits[2];}
+                                if (GcircleLimits[3] > limits->yMax) {limits->yMax = GcircleLimits[3];}
                             }
                             lines[arrLine].startAngle = GangleStart; lines[arrLine].endAngle = 360.; lines[arrLine].radius = Rnew;
                             Gangle = (360. - GangleStart) + GangleEnd; GangleStart = 0.;
@@ -295,13 +299,13 @@ int NCparseFile (char *file, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStru
 
                         if (numDiffDouble (GangleStart, GangleEnd) > 0.01) {
                             arcOverLimits = false;
-                            if ((Inew - Rnew) < limits[0].xMin || (Jnew - Rnew) < limits[0].yMin || (Inew + Rnew) > limits[0].xMax || (Jnew + Rnew) > limits[0].yMax) {arcOverLimits = true;} //opt
+                            if ((Inew - Rnew) < limits->xMin || (Jnew - Rnew) < limits->yMin || (Inew + Rnew) > limits->xMax || (Jnew + Rnew) > limits->yMax) {arcOverLimits = true;} //opt
                             if (arcOverLimits) {
                                 arcLimits (GcircleLimits, Inew, Jnew, Rnew * 2, Rnew * 2, GangleStart, GangleEnd, 1);
-                                if (GcircleLimits[0] < limits[0].xMin) {limits[0].xMin = GcircleLimits[0];}
-                                if (GcircleLimits[1] > limits[0].xMax) {limits[0].xMax = GcircleLimits[1];}
-                                if (GcircleLimits[2] < limits[0].yMin) {limits[0].yMin = GcircleLimits[2];}
-                                if (GcircleLimits[3] > limits[0].yMax) {limits[0].yMax = GcircleLimits[3];}
+                                if (GcircleLimits[0] < limits->xMin) {limits->xMin = GcircleLimits[0];}
+                                if (GcircleLimits[1] > limits->xMax) {limits->xMax = GcircleLimits[1];}
+                                if (GcircleLimits[2] < limits->yMin) {limits->yMin = GcircleLimits[2];}
+                                if (GcircleLimits[3] > limits->yMax) {limits->yMax = GcircleLimits[3];}
                             }
                             lines[arrLine].startAngle1 = GangleStart; lines[arrLine].endAngle1 = GangleEnd; lines[arrLine].radius = Rnew;
                         }
@@ -313,7 +317,7 @@ int NCparseFile (char *file, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStru
                         if (tmpTravel > 0.001) {ops[commentIndex].distCircular += tmpTravel; ops[commentIndex].timeCircular += tmpTravel / Fnew;}
                     }
                 } else if (Gnew == 81 || Gnew == 82 || Gnew == 83) { //drill
-                    linescount[0].g81++; //increment line count
+                    linescount->g81++; //increment line count
                     if (tmpTravelX > 0.001 && tmpTravelY < 0.001) {tmpTravel = tmpTravelX; //only moved in x
                     } else if (tmpTravelX < 0.001 && tmpTravelY > 0.001) {tmpTravel = tmpTravelY; //only moved in y
                     } else if (tmpTravelX > 0.001 && tmpTravelY > 0.001) {tmpTravel = sqrt(tmpTravelX*tmpTravelX + tmpTravelY*tmpTravelY);} // moved both x y
@@ -328,6 +332,11 @@ int NCparseFile (char *file, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStru
                         }
                     } else {tmpTravelZ = tmpDouble * 2;} //G81: basic drilling
                     tmpTravel += tmpTravelZ; //add z travel to tool distance
+                    if (retractMode == 1) { //retract to initial Z
+                        tmpTravel += numDiffDouble(Zinit, Rnew);
+                        lines[arrLine].retractMode = retractMode; 
+                        lines[arrLine].startAngle = Zinit;
+                    }
                     if (tmpTravel > 0.001) {ops[commentIndex].distDrill += tmpTravel; ops[commentIndex].timeDrill += (tmpTravel / Fnew);} //update drill ops travel/time
                 }
 
@@ -335,7 +344,7 @@ int NCparseFile (char *file, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStru
                     if (Gnew == 0) {ops[commentIndex].distFast += tmpTravel; ops[commentIndex].timeFast += tmpTravel / Ffast; //fast
                     } else {ops[commentIndex].distWork += tmpTravel; ops[commentIndex].timeWork += tmpTravel / Fnew;} //work
                 }
-            } else {linescount[0].skip++;}
+            } else {linescount->skip++;}
 
             Xlast = Xnew;
             Ylast = Ynew;
@@ -343,9 +352,10 @@ int NCparseFile (char *file, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStru
             currLine++;
         }
 
-        linescount[0].all = linescount[0].commented + linescount[0].skip + linescount[0].g0 + linescount[0].g1 + linescount[0].g2 + linescount[0].g3 + linescount[0].g81; //compute line count
-        tmpInt = 0; for (unsigned int i=0; i<arrSizes->toolStrucLimit; i++) {if (tools[i].num != -1){tmpInt++;}} linescount[0].tools = tmpInt; //amount of tools detected
-        tmpDouble = 0; tmpDouble1 = 0; for (unsigned int i=0; i<arrSizes->distTimeStrucLimit; i++) {if (ops[i].timeFast > 0.){tmpDouble += ops[i].timeFast;} if (ops[i].timeWork > 0.){tmpDouble1 += ops[i].timeWork;}} linescount[0].totalTimeFast = tmpDouble; linescount[0].totalTimeWork = tmpDouble1; //compute total time
+        linescount->all = linescount->commented/* + linescount->skip*/ + linescount->g0 + linescount->g1 + linescount->g2 + linescount->g3 + linescount->g81; //compute line count
+        tmpInt = 0; for (unsigned int i=0; i<arrSizes->toolStrucLimit; i++) {if (tools[i].num != -1){tmpInt++;}} linescount->tools = tmpInt; //amount of tools detected
+        tmpDouble = 0; tmpDouble1 = 0; for (unsigned int i=0; i<arrSizes->distTimeStrucLimit; i++) {if (ops[i].timeFast > 0.){tmpDouble += ops[i].timeFast;} if (ops[i].timeWork > 0.){tmpDouble1 += ops[i].timeWork;}} linescount->totalTimeFast = tmpDouble; linescount->totalTimeWork = tmpDouble1; //compute total time
+        arrSizes->distTimeStrucLimit = commentIndex + 1;
 
         //debug
         if(debugOutput){
@@ -358,18 +368,18 @@ int NCparseFile (char *file, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStru
             fprintf (ncFileDebugHandle, "\n\n\nDEBUG REPORT\n");
 
             fprintf (ncFileDebugHandle, "\nstruct ncFlagsStruc: var 'flags'\n");
-            fprintf (ncFileDebugHandle, "\tcoord:%d, circular:%d, workplane:%d, compensation:%d, unit:%d\n",flags[0].coord,flags[0].circular,flags[0].workplane,flags[0].compensation,flags[0].unit);
+            fprintf (ncFileDebugHandle, "\tcoord:%d, circular:%d, workplane:%d, compensation:%d, unit:%d\n",flags->coord,flags->circular,flags->workplane,flags->compensation,flags->unit);
 
             fprintf (ncFileDebugHandle, "\nstruct ncLimitStruc: var 'limits'\n");
-            fprintf (ncFileDebugHandle, "\txMin:%lf, xMax:%lf, yMin:%lf, yMax:%lf, zMin:%lf, zMax:%lf, zMinWork:%lf, zMaxWork:%lf\n",limits[0].xMin,limits[0].xMax,limits[0].yMin,limits[0].yMax,limits[0].zMin,limits[0].zMax,limits[0].zMinWork,limits[0].zMaxWork);
+            fprintf (ncFileDebugHandle, "\txMin:%lf, xMax:%lf, yMin:%lf, yMax:%lf, zMin:%lf, zMax:%lf, zMinWork:%lf, zMaxWork:%lf\n",limits->xMin,limits->xMax,limits->yMin,limits->yMax,limits->zMin,limits->zMax,limits->zMinWork,limits->zMaxWork);
 
             fprintf (ncFileDebugHandle, "\nstruct ncLinesCountStruc: var 'linescount'\n");
-            fprintf (ncFileDebugHandle, "\tall:%d, commented:%d, skip:%d, g0:%d, g1:%d, g2:%d, g3:%d, g81:%d\n",linescount[0].all,linescount[0].commented,linescount[0].skip,linescount[0].g0,linescount[0].g1,linescount[0].g2,linescount[0].g3,linescount[0].g81);
+            fprintf (ncFileDebugHandle, "\tall:%d, commented:%d, skip:%d, g0:%d, g1:%d, g2:%d, g3:%d, g81:%d\n",linescount->all,linescount->commented,linescount->skip,linescount->g0,linescount->g1,linescount->g2,linescount->g3,linescount->g81);
 
             fprintf (ncFileDebugHandle, "\nstruct ncDistTimeStruc: var 'ops'\n");
             for (i=0; i<arrSizes->distTimeStrucLimit; i++) {
                 if (ops[i].distWork>0. || ops[i].distFast>0.){
-                    fprintf (ncFileDebugHandle, "\tname:'%s', distWork:%lf, distFast:%lf, distCircular:%lf, distDrill:%lf, timeWork:%lf, timeFast:%lf, timeCircular:%lf, timeDrill:%lf\n",ops[i].name,ops[i].distWork,ops[i].distFast,ops[i].distCircular,ops[i].distDrill,ops[i].timeWork,ops[i].timeFast,ops[i].timeCircular,ops[i].timeDrill);
+                    fprintf (ncFileDebugHandle, "\tid:%d , name:'%s', distWork:%lf, distFast:%lf, distCircular:%lf, distDrill:%lf, timeWork:%lf, timeFast:%lf, timeCircular:%lf, timeDrill:%lf\n",i,ops[i].name,ops[i].distWork,ops[i].distFast,ops[i].distCircular,ops[i].distDrill,ops[i].timeWork,ops[i].timeFast,ops[i].timeCircular,ops[i].timeDrill);
                     debugDistWork += ops[i].distWork; debugTimeWork += ops[i].timeWork;
                     debugDistFast += ops[i].distFast; debugTimeFast += ops[i].timeFast;
                     debugDistCircular += ops[i].distCircular; debugTimeCircular += ops[i].timeCircular;
@@ -383,7 +393,7 @@ int NCparseFile (char *file, ncFlagsStruc *flags, ncLineStruc *lines, ncToolStru
             for (i=0; i<arrSizes->toolStrucLimit; i++) {if (tools[i].num != -1){fprintf (ncFileDebugHandle, "\tnum:%d, diameter:%f, radius:%f, length:%f, angle:%f\n",tools[i].num,tools[i].diameter,tools[i].radius,tools[i].length,tools[i].angle);}}
 
             fprintf (ncFileDebugHandle, "\nstruct ncLineStruc: var 'lines'\n"); i=0;
-            while (lines[i].g!=-1) {fprintf (ncFileDebugHandle, "\tline %d : g:%d, tool:%d, f:%d, x:%lf, y:%lf, z:%lf, i=%lf, j:%lf, k:%lf, q:%lf, r:%lf, startAngle:%lf, endAngle:%lf, startAngle1:%lf, endAngle1:%lf, radius:%lf\n",i,lines[i].g,lines[i].tool,lines[i].f,lines[i].x,lines[i].y,lines[i].z,lines[i].i,lines[i].j,lines[i].k,lines[i].q,lines[i].r,lines[i].startAngle,lines[i].endAngle,lines[i].startAngle1,lines[i].endAngle1,lines[i].radius); i++;}
+            while (lines[i].g!=-1) {fprintf (ncFileDebugHandle, "\tline %d : g:%d, comment:%d, tool:%d, f:%d, x:%lf, y:%lf, z:%lf, i=%lf, j:%lf, k:%lf, q:%lf, r:%lf, startAngle:%lf, endAngle:%lf, startAngle1:%lf, endAngle1:%lf, radius:%lf\n",i,lines[i].g,lines[i].comment,lines[i].tool,lines[i].f,lines[i].x,lines[i].y,lines[i].z,lines[i].i,lines[i].j,lines[i].k,lines[i].q,lines[i].r,lines[i].startAngle,lines[i].endAngle,lines[i].startAngle1,lines[i].endAngle1,lines[i].radius); i++;}
             fclose(ncFileDebugHandle);
         }
 
