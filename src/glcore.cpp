@@ -513,6 +513,7 @@ int glPreview (ncLineStruc *lines, ncToolStruc *tools, ncDistTimeStruc *ops, ncL
         //ImGui frame
         ImGui_ImplOpenGL3_NewFrame(); ImGui_ImplGlfw_NewFrame(); ImGui::NewFrame(); //init ImGui frame
 
+        //start menubar
         if (ImGui::BeginMainMenuBar()) {
             mainMenuBarSize = ImGui::GetWindowSize(); //backup menu height for side tab positioning
             ImGui::SetCursorPosX (mainSideBarSize.x); //offset to avoid menu collide with side menu
@@ -560,7 +561,7 @@ int glPreview (ncLineStruc *lines, ncToolStruc *tools, ncDistTimeStruc *ops, ncL
 
         //start sidebar
         ImGui::SetNextWindowPos(ImVec2 (0.f,0.f)); ImGui::SetNextWindowSize(ImVec2 (0.f,(float)screenHeight + mainMenuBarSize.y)); //set sidebar position and size
-        ImGui::SetNextWindowCollapsed (true, ImGuiCond_Once); //collapse on first draw loop
+        //ImGui::SetNextWindowCollapsed (true, ImGuiCond_Once); //collapse report menu
         if (ImGui::Begin(strGl[language][STR_GL::LAYER_REPORT], NULL, sideBarFlags)) {
             mainSideBarSize = ImGui::GetWindowSize(); //backup sidebar sizes for menu positioning
             for (unsigned int i=0; i<layersLimit+1; i++) { //layers loop
@@ -569,8 +570,7 @@ int glPreview (ncLineStruc *lines, ncToolStruc *tools, ncDistTimeStruc *ops, ncL
                 if (tmpDouble > 0.0001) { //something happened in current layer
                     if (sideBarLastElement) {ImGui::Separator(); sprintf (layerName, "%s  ###%d", strGl[language][STR_GL::TOOL_TOTAL], i); //total menu name
                     } else {sprintf (layerName, "%s  ###%d", ops[i].name,i);} //layers menu name
-                    
-                    if (ImGui::TreeNodeEx(layerName, (layersEnable[i]) ? ImGuiTreeNodeFlags_Selected : 0)) {
+                    if (ImGui::TreeNodeEx(layerName, (sideBarLastElement ? ImGuiTreeNodeFlags_DefaultOpen : (layersEnable[i]) ? ImGuiTreeNodeFlags_Selected : 0))) { //open total by default
                         if (!sideBarLastElement && ImGui::IsItemHovered ()) {layersHovered [i] = true; glViewportUpdate = true;} else {layersHovered [i] = false;} //menu is howered, also avoid a glitch where menu disappair without notice
                         if (!sideBarLastElement){
                             sprintf (layerDisplayStr, "%s###dispLayer%d", (layersEnable[i]) ? strGl[language][STR_GL::LAYER_HIDE] : strGl[language][STR_GL::LAYER_DISPLAY], i); //layers menu name
