@@ -51,6 +51,11 @@ Require zlib1g-dev, libpng-dev, libgd-dev, libgl-dev, libglfw3-dev to be install
   - Allow to display/hide subgrid/grid/axis/gcode "layers" and separate toolpaths kind.
   - Allow to edit configuration file via Gui.
   
+  Note:  
+  Preview can fail and program closes without notice on Windows 10/11.  
+  This can be caused (on multi GPU systems) by the way Windows power management works.  
+  A possible fix is to force usage of a specific GPU (Computer settings > System > Display > Graphics settings).  
+  
 ![glpreviewnc](img/prevgl01.png)  
 ![glpreviewfdm](img/prevgl02.png)  
   
