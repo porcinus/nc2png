@@ -81,8 +81,8 @@ In following lines, you will have to replace {MSYS2_PATH} by your full path to M
 - Download lastest package from [MSYS2](https://www.msys2.org/)
   
 - Run MSYS2 MinGW and install needed packages :
-  - 32bits : `pacman -S --needed base-devel mingw-w64-i686-toolchain mingw-w64-i686-libgd`
-  - 64bits : `pacman -S --needed base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-libgd`
+  - 32bits : `pacman -S --needed base-devel mingw-w64-i686-toolchain mingw-w64-i686-libgd mingw-w64-i686-glfw`
+  - 64bits : `pacman -S --needed base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-libgd mingw-w64-x86_64-glfw`
   
 - Update Windows environnement variable 'Path' by adding proper path :
   - 32bits : `{MSYS2_PATH}\mingw32\bin`
