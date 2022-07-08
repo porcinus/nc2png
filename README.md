@@ -101,40 +101,48 @@ In following lines, you will have to replace {MSYS2_PATH} by your full path to M
 #### Cross-compile on Linux (Ubuntu Server):  
 Everything done here using terminal.  
 Require `git`, `tar`, `mingw-w64`, `mingw-w64-tools`, `unzip`, `dos2unix` packages to be installed.  
+Required libraries urls may change without notice, if you get 404 errors, please check following website for updated versions:  
+- https://zlib.net/
+- https://sourceforge.net/projects/libpng/
+- https://github.com/libgd/libgd/
   
-`cd $HOME`  
-`mkdir work`  
-`cd work`  
-`mkdir libs`  
-`mkdir build`  
-`cd libs`  
-`wget https://zlib.net/zlib1211.zip`  
-`unzip zlib1211.zip`  
-`wget https://sourceforge.net/projects/libpng/files/libpng16/1.6.37/lpng1637.zip`  
-`unzip lpng1637.zip`  
-`wget https://github.com/libgd/libgd/releases/download/gd-2.3.2/libgd-2.3.2.tar.gz`  
-`tar -xf libgd-2.3.2.tar.gz`  
-  
+```
+cd $HOME
+mkdir work
+cd work
+mkdir libs
+mkdir build
+cd libs
+wget https://zlib.net/zlib1212.zip
+unzip zlib1212.zip
+wget https://sourceforge.net/projects/libpng/files/libpng16/1.6.37/lpng1637.zip
+unzip lpng1637.zip
+wget https://github.com/libgd/libgd/releases/download/gd-2.3.2/libgd-2.3.2.tar.gz
+tar -xf libgd-2.3.2.tar.gz
+```
+
 Now lets prepare compilation scripts, in order to work this will have to be done in a specific order : `zlib`, `libpng` then `libgd`.  
 All these scripts will have to be created in `$HOME/work/libs`, don't miss to chmod +x each scripts once saved.  
   
 Create 'zlib.sh':  
-```#!/bin/bash
+```
+#!/bin/bash
 rm ../build/zlib1.dll
-cd zlib-1.2.11
-PREFIXDIR=$HOME/work/libs/zlib-1.2.11
+cd zlib-1.2.12
+PREFIXDIR=$HOME/work/libs/zlib-1.2.12
 make -f win32/Makefile.gcc clean
 make -f win32/Makefile.gcc BINARY_PATH=$PREFIXDIR/bin INCLUDE_PATH=$PREFIXDIR/include LIBRARY_PATH=$PREFIXDIR/lib SHARED_MODE=1 STATIC_MODE=1 PREFIX=i686-w64-mingw32- install
 cd ..
-cp zlib-1.2.11/zlib1.dll ../build/zlib1.dll
+cp zlib-1.2.12/zlib1.dll ../build/zlib1.dll
 ```
   
 Create 'libpng.sh':  
-```#!/bin/bash
+```
+#!/bin/bash
 rm ../build/libpng16-16.dll
 cd lpng1637
 export CC='i686-w64-mingw32-gcc -static-libgcc'
-export ZLIBLIB=$HOME/work/libs/zlib-1.2.11/lib
+export ZLIBLIB=$HOME/work/libs/zlib-1.2.12/lib
 export ZLIBINC=$HOME/work/libs/zlib-1.2.11/include
 export CFLAGS="-g -static-libgcc"
 export CPPFLAGS="-I$ZLIBINC"
@@ -153,7 +161,8 @@ i686-w64-mingw32-strip ../build/libpng16-16.dll
 ```
   
 Create 'libgd.sh':  
-```#!/bin/sh --
+```
+#!/bin/sh --
 rm ../build/libgd-3.dll
 cd libgd-2.3.2
 export CC=i686-w64-mingw32-gcc
@@ -172,17 +181,20 @@ i686-w64-mingw32-strip ../build/libgd-3.dll
 ```
   
 Lets compile libraries, get the program :  
-`dos2unix -f zlib.sh libpng.sh libgd.sh`  
-`chmod +x zlib.sh libpng.sh libgd.sh`  
-`./zlib.sh`  
-`./libpng.sh`  
-`./libgd.sh`  
-`cd $HOME/work`  
-`git clone https://github.com/porcinus/nc2png`  
-`cd nc2png`  
+```
+dos2unix -f zlib.sh libpng.sh libgd.sh
+chmod +x zlib.sh libpng.sh libgd.sh
+/zlib.sh
+./libpng.sh
+./libgd.sh
+cd $HOME/work
+git clone https://github.com/porcinus/nc2png
+cd nc2png
+```
   
 Create 'compile.sh':  
-```#!/bin/sh
+```
+#!/bin/sh
 export libpng_path="$HOME/work/libs/lpng1637/tmp"
 export zlib_path="$HOME/work/libs/zlib-1.2.11"
 export libgd_path="$HOME/work/libs/libgd-2.3.2/tmp"
@@ -198,16 +210,19 @@ chmod 755 $nc2png_build_path/nc2png.exe
 ```  
   
 Lets compile the program :  
-`dos2unix -f compile.sh`  
-`chmod +x compile.sh`  
-`./compile.sh`  
+```
+dos2unix -f compile.sh
+chmod +x compile.sh
+./compile.sh
+```
   
 All files you need should be found into `%HOME/work/build/` directory.  
   
 #### Compile for Linux (Ubuntu Server):  
 Assuming that you already have g++ packages installed, following packages will be required as well : `zlib1g-dev`, `libpng-dev`, `libgd-dev`.  
 Clone the git wherever you want then cd into src directory.  
-```#!/bin/sh
+```
+#!/bin/sh
 export nc2png_src_path="$HOME/work/nc2png/src"
 export nc2png_build_path="$HOME/work/build"
 rm $nc2png_build_path/nc2png
