@@ -184,7 +184,7 @@ Lets compile libraries, get the program :
 ```
 dos2unix -f zlib.sh libpng.sh libgd.sh
 chmod +x zlib.sh libpng.sh libgd.sh
-/zlib.sh
+./zlib.sh
 ./libpng.sh
 ./libgd.sh
 cd $HOME/work
