@@ -100,7 +100,7 @@ In following lines, you will have to replace {MSYS2_PATH} by your full path to M
   
 #### Cross-compile on Linux (Ubuntu Server):  
 Everything done here using terminal.  
-Require `git`, `tar`, `mingw-w64`, `mingw-w64-tools`, `unzip`, `dos2unix` packages to be installed.  
+Require `make`, `git`, `tar`, `mingw-w64`, `mingw-w64-tools`, `unzip`, `dos2unix` packages to be installed.  
 Required libraries urls may change without notice, if you get 404 errors, please check following website for updated versions:  
 - https://zlib.net/
 - https://sourceforge.net/projects/libpng/
@@ -143,7 +143,7 @@ rm ../build/libpng16-16.dll
 cd lpng1637
 export CC='i686-w64-mingw32-gcc -static-libgcc'
 export ZLIBLIB=$HOME/work/libs/zlib-1.2.12/lib
-export ZLIBINC=$HOME/work/libs/zlib-1.2.11/include
+export ZLIBINC=$HOME/work/libs/zlib-1.2.12/include
 export CFLAGS="-g -static-libgcc"
 export CPPFLAGS="-I$ZLIBINC"
 export LDFLAGS="-L$ZLIBLIB"
@@ -171,7 +171,7 @@ export LIBZ_CFLAGS=" -g "
 export LIBZ_LIBS=" -lz "
 export LIBPNG_CFLAGS=" -g "
 export LIBPNG_LIBS=" -lpng "
-./configure --host=i686-w64-mingw32 --enable-shared --disable-static --prefix=$PWD/tmp --with-zlib=$HOME/work/libs/zlib-1.2.11 --with-png=$HOME/work/libs/lpng1637/tmp
+./configure --host=i686-w64-mingw32 --enable-shared --disable-static --prefix=$PWD/tmp --with-zlib=$HOME/work/libs/zlib-1.2.12 --with-png=$HOME/work/libs/lpng1637/tmp
 make clean
 make
 make install
@@ -196,7 +196,7 @@ Create 'compile.sh':
 ```
 #!/bin/sh
 export libpng_path="$HOME/work/libs/lpng1637/tmp"
-export zlib_path="$HOME/work/libs/zlib-1.2.11"
+export zlib_path="$HOME/work/libs/zlib-1.2.12"
 export libgd_path="$HOME/work/libs/libgd-2.3.2/tmp"
 export nc2png_src_path="$HOME/work/nc2png/src"
 export nc2png_build_path="$HOME/work/build"
