@@ -230,3 +230,6 @@ g++ -w -s $nc2png_src_path/glad.c $nc2png_src_path/include/imgui/*.cpp $nc2png_s
 chmod 755 $nc2png_build_path/nc2png
 ```  
   
+## Known issues:
+- OpenGL preview not opening on Win10/11 : Please refer to ```OpenGL preview features`` section.
+- Some "cut" tool paths preview can look weird, offsized or undersized, this is mainly liked to integer rounding. This problem may be solved in the future when other side projects done. 
