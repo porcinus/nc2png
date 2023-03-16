@@ -7,7 +7,7 @@ Uses [libGD](https://libgd.github.io/), [libpng](http://www.libpng.org/), [zlib]
 Uses [GLFW](https://www.glfw.org/), [GLAD](https://glad.dav1d.de/), [GLM](https://github.com/g-truc/glm), [ImGui](https://github.com/ocornut/imgui) for the OpenGL part.  
 A massive thanks to Joey de Vries for its amazing [Learn OpenGl](https://learnopengl.com) website, it did help a ton to make the OpenGL part.  
   
-Require [Ansicon](https://github.com/adoxa/ansicon) to be installed for Windows version.  
+Require [Ansicon](https://github.com/adoxa/ansicon) to be installed for Windows version NOT running Windows Console by default (check ``Windows Console`` section for more informations).  
 Require zlib1g-dev, libpng-dev, libgd-dev, libgl-dev, libglfw3-dev to be installed on Linux in order to compile.  
   
   
@@ -20,6 +20,12 @@ Require zlib1g-dev, libpng-dev, libgd-dev, libgl-dev, libglfw3-dev to be install
 - Units : Doesn't take account of G20 (inch), will be considered as mm.  
 - Work plane : Only support G17 (XY), G18-19 are ignored.  
 - Tool compensation : Only support no compensation (G40), G41-42 are ignored.  
+  
+  
+#### Windows Console specific (Windows 10/11 H2 or newer):  
+- With recent updates (2022+), program normally running with cmd.exe (conhost.exe) now uses Windows Console by default.  
+- Since Windows Console doesn't handle process creation the "old way" but also supports ANSI formatting, you should compile the program without ANSICON support by defining 'WINCON' in compiling command line (e.g. adding -DWINCON).  
+- Precompiled version will be provided with a executable not performing ANSICON check (nc2png-wincon.exe).  
   
   
 #### Features :  
@@ -205,8 +211,11 @@ rm $nc2png_build_path/nc2png.exe
 rm $nc2png_src_path/nc2png.res32.o
 /usr/bin/i686-w64-mingw32-windres -F pe-i386 -i $nc2png_src_path/nc2png.rc -o $nc2png_src_path/nc2png.res32.o
 i686-w64-mingw32-g++ -static-libgcc -static-libstdc++ -s $nc2png_src_path/glad.c $nc2png_src_path/include/imgui/*.cpp $nc2png_src_path/include/imgui/backends/imgui_impl_opengl3.cpp $nc2png_src_path/include/imgui/backends/imgui_impl_glfw.cpp $nc2png_src_path/glcore.cpp $nc2png_src_path/lang.cpp $nc2png_src_path/win.cpp $nc2png_src_path/ansicon.cpp $nc2png_src_path/config.cpp $nc2png_src_path/gdcore.cpp $nc2png_src_path/ncparser.cpp $nc2png_src_path/nc2png.cpp $nc2png_src_path/nc2png.res32.o -o $nc2png_build_path/nc2png.exe -L"$libpng_path/lib" -I"$libpng_path/include" -L"$zlib_path/lib" -I"$zlib_path/include" -L"$libgd_path/lib" -I"$libgd_path/include" -I"$libgd_path/include" -I"$nc2png_src_path/include" -I"$nc2png_src_path/include/imgui" -L"$nc2png_src_path/lib" -lglfw3dll -lgd -lpsapi -lm -lz -std=c++17
+i686-w64-mingw32-g++ -DWINCON -static-libgcc -static-libstdc++ -s $nc2png_src_path/glad.c $nc2png_src_path/include/imgui/*.cpp $nc2png_src_path/include/imgui/backends/imgui_impl_opengl3.cpp $nc2png_src_path/include/imgui/backends/imgui_impl_glfw.cpp $nc2png_src_path/glcore.cpp $nc2png_src_path/lang.cpp $nc2png_src_path/win.cpp $nc2png_src_path/ansicon.cpp $nc2png_src_path/config.cpp $nc2png_src_path/gdcore.cpp $nc2png_src_path/ncparser.cpp $nc2png_src_path/nc2png.cpp $nc2png_src_path/nc2png.res32.o -o $nc2png_build_path/nc2png-wincon.exe -L"$libpng_path/lib" -I"$libpng_path/include" -L"$zlib_path/lib" -I"$zlib_path/include" -L"$libgd_path/lib" -I"$libgd_path/include" -I"$libgd_path/include" -I"$nc2png_src_path/include" -I"$nc2png_src_path/include/imgui" -L"$nc2png_src_path/lib" -lglfw3dll -lgd -lpsapi -lm -lz -std=c++17
 i686-w64-mingw32-strip $nc2png_build_path/nc2png.exe
+i686-w64-mingw32-strip $nc2png_build_path/nc2png-wincon.exe
 chmod 755 $nc2png_build_path/nc2png.exe
+chmod 755 $nc2png_build_path/nc2png-wincon.exe
 ```  
   
 Lets compile the program :  
@@ -232,4 +241,5 @@ chmod 755 $nc2png_build_path/nc2png
   
 ## Known issues:
 - OpenGL preview not opening on Win10/11 : Please refer to ```OpenGL preview features`` section.
+- Program closes on Win10/11 H2 (2022+) : if preview line requirement meet: please check ``Windows Console`` section.
 - Some "cut" tool paths preview can look weird, offsized or undersized, this is mainly liked to integer rounding. This problem may be solved in the future when other side projects done. 
