@@ -5,7 +5,7 @@ Based on a PHP script I made years ago to help me figure out time required to mi
   
 Uses [libGD](https://libgd.github.io/), [libpng](http://www.libpng.org/), [zlib](https://zlib.net/) for the console part.  
 Uses [GLFW](https://www.glfw.org/), [GLAD](https://glad.dav1d.de/), [GLM](https://github.com/g-truc/glm), [ImGui](https://github.com/ocornut/imgui) for the OpenGL part.  
-A massive thanks to Joey de Vries for its amazing [Learn OpenGl](https://learnopengl.com) website, it did help a ton to make the OpenGL part.  
+A massive thanks to Joey de Vries for its amazing [Learn OpenGL](https://learnopengl.com) website, it did help a ton to make the OpenGL part.  
   
 Require [Ansicon](https://github.com/adoxa/ansicon) to be installed for Windows version NOT running Windows Console by default (check ``Windows Console`` section for more informations).  
 Require zlib1g-dev, libpng-dev, libgd-dev, libgl-dev, libglfw3-dev to be installed on Linux in order to compile.  
@@ -26,6 +26,7 @@ Require zlib1g-dev, libpng-dev, libgd-dev, libgl-dev, libglfw3-dev to be install
 - With recent updates (2022+), program normally running with cmd.exe (conhost.exe) now uses Windows Console by default.  
 - Since Windows Console doesn't handle process creation the "old way" but also supports ANSI formatting, you should compile the program without ANSICON support by defining 'WINCON' in compiling command line (e.g. adding -DWINCON).  
 - Precompiled version will be provided with a executable not performing ANSICON check (nc2png-wincon.exe).  
+- Config file (nc2png.cfg) is shared between ANSICON and WINCON version.  
   
   
 #### Features :  
