@@ -7,7 +7,7 @@ Related to Ansicon, used on Windows to provide console ansi color compatibility.
 
 #include "ansicon.h"
 
-#if defined _WIN32 || defined __CYGWIN__
+#if (!defined WINCON && (defined _WIN32 || defined __CYGWIN__))
 int checkAnsiconExists (void) { //search thru PATH for ansicon
     if(debug){fprintf(stderr,"DEBUG: Start search for ansicon.exe in PATH variable\n");}
     struct stat filestat;

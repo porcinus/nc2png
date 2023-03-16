@@ -18,15 +18,14 @@ extern "C" {
 #include <zlib.h>
 #include "gd.h"
 }
-#if defined _WIN32 || defined __CYGWIN__
+
+#if (defined _WIN32 || defined __CYGWIN__)
     #include <windows.h>
     #include "win.h"
 #endif
 
 //terminal enable color var
-#if defined __linux__
-    bool termColor = true;
-#elif defined __APPLE__
+#if (defined __linux__ || defined __APPLE__ || defined WINCON)
     bool termColor = true;
 #else
     bool termColor = false;

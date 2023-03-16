@@ -34,7 +34,7 @@ int main (int argc, char *argv[]) {
     char strBuffer [4096]; //string buffer
     language = getLocale (); //try to recover system language
     
-    #if defined _WIN32 || defined __CYGWIN__
+    #if (!defined WINCON && (defined _WIN32 || defined __CYGWIN__))
     if(checkAnsiconModule() > 0) {termColor = true; //ansicon module is found
     } else {
         if (!shouldRunAnsicon && checkAnsiconExists () != 0){ //ansicon found in PATH
@@ -61,7 +61,7 @@ int main (int argc, char *argv[]) {
         fgets (strBuffer , 10 , stdin); //wait for use input
         return 0; //bye
     } else {
-        #if defined _WIN32 || defined __CYGWIN__
+        #if (!defined WINCON && (defined _WIN32 || defined __CYGWIN__))
         SetConsoleCtrlHandler((PHANDLER_ROUTINE) CtrlHandler, true); //handle ctrl-c on windows to avoid ansicon glitch that doesn't reset ansi code
         #endif
     }
@@ -90,11 +90,11 @@ int main (int argc, char *argv[]) {
 		} else if (strcmp(argv[i], "-debug") == 0) {debug = true; //debug mode
         } else {sprintf (ncFilePath, "%s %s", ncFilePath, argv[i]);}
 	}
-
-/*if (strlen(ncFilePath) < 1) {
+/*
+if (strlen(ncFilePath) < 1) {
 strcpy (ncFilePath, "support vesa 5mm x3.nc"); //DEBUG GL
-}*/
-
+}
+*/
     if (strlen(ncFilePath) > 0) {
         struct stat filestat;
         if (ncFilePath [0] == ' ') { //shift left if start by space

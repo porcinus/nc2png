@@ -12,7 +12,7 @@ Related to Ansicon, used on Windows to provide console ansi color compatibility.
 //#include <cstdlib> //c standard
 //#include <cstring> //string
 #include <limits.h> //limits
-#if defined _WIN32 || defined __CYGWIN__
+#if (!defined WINCON && (defined _WIN32 || defined __CYGWIN__))
     #include <windows.h>
     //#include <tchar.h>
     #include <psapi.h>

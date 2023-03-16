@@ -44,8 +44,8 @@ void configParse (void) { //parse/create program config file
                 tmpEqPtr = strchr(strElementBuffer, '='); //'=' char position
                 if (tmpEqPtr != NULL) { //contain '='
                     *tmpEqPtr='\0'; int tmpVarSize = strlen(strElementBuffer), tmpValSize = strlen(tmpEqPtr+1); //var and val sizes
-                    char tmpVar [tmpVarSize]; strcpy (tmpVar, strElementBuffer); //extract var
-                    char tmpVal [tmpValSize]; strcpy (tmpVal, tmpEqPtr + 1); //extract val
+                    char tmpVar [tmpVarSize+1]; strcpy (tmpVar, strElementBuffer); tmpVar [tmpVarSize] = '\0'; //extract var
+                    char tmpVal [tmpValSize+1]; strcpy (tmpVal, tmpEqPtr + 1); tmpVal [tmpValSize] = '\0'; //extract val
                     int tmpIndex = inCharArray ((char**)cfgVarsName, tmpVar, cfgVarsArrSize); //var in config array
                     if (tmpIndex != -1) { //found in config array
                         int tmpType = cfgVarsType[tmpIndex];
@@ -53,14 +53,14 @@ void configParse (void) { //parse/create program config file
                         } else if (tmpType == 1) {*(unsigned int*)cfgVarsPtr[tmpIndex] = atoi (tmpVal); //unsigned int
                         } else if (tmpType == 2) {*(float*)cfgVarsPtr[tmpIndex] = atof (tmpVal); //float
                         } else if (tmpType == 3) {*(double*)cfgVarsPtr[tmpIndex] = atof (tmpVal);} //double
-                        if(debug){char strDebugBuffer1 [4096]; sprintf (strDebugBuffer1, "%s=%s", tmpVar, tmpVal); strcat (strDebugBuffer, strDebugBuffer1);}
+                        if(debug){char strDebugBuffer1 [4096]; sprintf (strDebugBuffer1, "%s=%s ", tmpVar, tmpVal); strcat (strDebugBuffer, strDebugBuffer1);}
                     }
                 }
                 tmpPtr = strtok (NULL, ";"); //next element
             }
         }
         fclose(filehandle);
-        if(debug){fprintf(stderr, strDebugBuffer);}
+        if(debug){fprintf(stderr, "%s\n", strDebugBuffer);}
     } else {configEdit (true);}
 }
 
