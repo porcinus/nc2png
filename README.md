@@ -11,22 +11,43 @@ Require [Ansicon](https://github.com/adoxa/ansicon) to be installed for Windows 
 Require zlib1g-dev, libpng-dev, libgd-dev, libgl-dev, libglfw3-dev to be installed on Linux in order to compile.  
   
   
+#### Upcoming update 0.4a (no to-be-deployed date yet, listen under already done):
+- Massive modifications on internal work/code.
+- Multi languages support eased.
+- Config file parser reworked using implement fixes from other projects (vars name, data type, comments) plus few performance upgrades.
+- Gcode parser performance/compat upgrade (10-20% faster):
+  * Use of custom strtok() function.
+  * Better detection of CutView data.
+  * Comment parsing rework.
+- LibGD upgrade (png file output):
+  * Performance update.
+  * Depth map export if CutView tools data detected.
+- Implement output of HTML with embed SVG/JS data:
+  * Allow interactive navigation thru the data extracted from gcode file.
+  * Since SVG isn't a rasted format file, output file will be bigger than original file (sometime massively bigger).
+  * Preview performance will depend on user computer and browser used.
+  * Still in primitive state.
+- Better debug outputs (including gcode, png, svg, gl).
+- More things to come (didn't everything in mind when updating this)...
+- Compile command lines will be updated when this update will be pushed.
+  
+  
 #### Limitations (may be implemented in the future):  
-- This code is not really optimized and a bit messy.  
+- This code still messy.  
 - Doesn't support axis accelerations.  
   
   
-#### Limitations (low chance of implementation):  
+#### Limitations (very low chance of implementation):  
 - Units : Doesn't take account of G20 (inch), will be considered as mm.  
 - Work plane : Only support G17 (XY), G18-19 are ignored.  
 - Tool compensation : Only support no compensation (G40), G41-42 are ignored.  
   
   
 #### Windows Console specific (Windows 10/11 H2 or newer):  
-- With recent updates (2022+), program normally running with cmd.exe (conhost.exe) now uses Windows Console by default.  
-- Since Windows Console doesn't handle process creation the "old way" but also supports ANSI formatting, you should compile the program without ANSICON support by defining 'WINCON' in compiling command line (e.g. adding -DWINCON).  
-- Precompiled version will be provided with a executable not performing ANSICON check (nc2png-wincon.exe).  
-- Config file (nc2png.cfg) is shared between ANSICON and WINCON version.  
+- With recent updates (late 2021+), program normally running with cmd.exe (conhost.exe) are now using Windows Console by default.  
+- Since Windows Console doesn't handle process creation the "old way" and also supports ANSI formatting, you should compile the program without ANSICON support by defining 'WINCON' in compiling command line (e.g. adding -DWINCON to compile line).  
+- Precompiled version will provided ANSICON compatible executable (nc2png.exe) but also no check executable (nc2png-wincon.exe).  
+- Config file (nc2png.cfg) is shared between ANSICON and WINCON version, no need to split folder when in multi compatible systems (mainly network shared folders).  
   
   
 #### Features :  
