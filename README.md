@@ -13,21 +13,24 @@ Require zlib1g-dev, libpng-dev, libgd-dev, libgl-dev, libglfw3-dev to be install
   
 #### Upcoming update 0.4a (no to-be-deployed date yet, listen under already done):
 - Massive modifications on internal work/code.
+- Linux specific:
+  * Can now run from desktop instead of only TTY/PTS.
+  * This implement will be limited because no universal way to detect default Terminal emulator really exist.
 - Multi languages support eased.
-- Config file parser reworked using implement fixes from other projects (vars name, data type, comments) plus few performance upgrades.
-- Gcode parser performance/compat upgrade (10-20% faster):
+- Config file parser reworked using implemented fixes from other projects (vars name, data type, comments) plus few performance upgrades.
+- Gcode parser performance/compatibility upgrade (10-20% faster):
   * Use of custom strtok() function.
   * Better detection of CutView data.
   * Comment parsing rework.
-- LibGD upgrade (png file output):
+- LibGD upgrade (PNG file output):
   * Performance update.
-  * Depth map export if CutView tools data detected.
-- Implement output of HTML with embed SVG/JS data:
+  * Depth map export if CutView tools data detected and proper depthmap enabled.
+- Partial implement output of HTML with embed SVG/JS data:
   * Allow interactive navigation thru the data extracted from gcode file.
   * Since SVG isn't a rasted format file, output file will be bigger than original file (sometime massively bigger).
   * Preview performance will depend on user computer and browser used.
   * Still in primitive state.
-- Better debug outputs (including gcode, png, svg, gl).
+- More debug outputs cause why not (including gcode parser, png, svg, gl).
 - More things to come (didn't everything in mind when updating this)...
 - Compile command lines will be updated when this update will be pushed.
   
