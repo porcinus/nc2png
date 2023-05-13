@@ -11,7 +11,7 @@ Require [Ansicon](https://github.com/adoxa/ansicon) to be installed for Windows 
 Require zlib1g-dev, libpng-dev, libgd-dev, libgl-dev, libglfw3-dev to be installed on Linux in order to compile.  
   
   
-#### Upcoming update 0.4a (no to-be-deployed date yet, listen under already done):
+#### Upcoming update 0.4a (no to-be-deployed date yet, listing under already done but may change):
 - Massive modifications on internal work/code.
 - Linux specific:
   * Can now run from desktop instead of only TTY/PTS.
@@ -23,13 +23,17 @@ Require zlib1g-dev, libpng-dev, libgd-dev, libgl-dev, libglfw3-dev to be install
   * Better detection of CutView data.
   * Comment parsing rework.
 - LibGD upgrade (PNG file output):
-  * Performance update.
-  * Depth map export if CutView tools data detected and proper depthmap enabled.
+  * IF CutView tools data detected, will generate more precise tool cut preview (around +25% time to generate preview but can allow to detect tool crashes and mistakes in gcode files.
 - Partial implement output of HTML with embed SVG/JS data:
   * Allow interactive navigation thru the data extracted from gcode file.
   * Since SVG isn't a rasted format file, output file will be bigger than original file (sometime massively bigger).
   * Preview performance will depend on user computer and browser used.
   * Still in primitive state.
+- OpenGl preview:
+  * Performance upgrade from previous versions.
+  * If CutView tools detected:  
+    > Tool cut preview.  
+    > Export to OBJ or STL (binary) format.  
 - More debug outputs cause why not (including gcode parser, png, svg, gl).
 - More things to come (didn't everything in mind when updating this)...
 - Compile command lines will be updated when this update will be pushed.
