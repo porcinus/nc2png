@@ -22,8 +22,10 @@ Require zlib1g-dev, libpng-dev, libgd-dev, libgl-dev, libglfw3-dev to be install
   * Use of custom strtok() function.
   * Better detection of CutView data.
   * Comment parsing rework.
+  * Pseudo ability to detect tool crashes if fast travel Z < min Z work plane.
 - LibGD upgrade (PNG file output):
   * IF CutView tools data detected, will generate more precise tool cut preview (around +25% time to generate preview but can allow to detect tool crashes and mistakes in gcode files.
+  * Now fully compatible with V tools (tool cut preview is extremely long).
 - Partial implement output of HTML with embed SVG/JS data:
   * Allow interactive navigation thru the data extracted from gcode file.
   * Since SVG isn't a rasted format file, output file will be bigger than original file (sometime massively bigger).
@@ -31,8 +33,9 @@ Require zlib1g-dev, libpng-dev, libgd-dev, libgl-dev, libglfw3-dev to be install
   * Still in primitive state.
 - OpenGl preview:
   * Performance upgrade from previous versions.
+  * glsl shaders upgraded, allow external shaders to be loaded (mainly for debug).
   * If CutView tools detected:  
-    > Tool cut preview.  
+    > Tool cut preview (normal endmill, drill and v tools).  
     > Export to OBJ or STL (binary) format.  
 - More debug outputs cause why not (including gcode parser, png, svg, gl).
 - More things to come (didn't everything in mind when updating this)...
