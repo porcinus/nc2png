@@ -1,6 +1,7 @@
 # nc2png  
 Generate preview and time estimations based on gcode file (milling/fdm), English and French localized.  
-   
+This program provided "as is", use at your own caution.  
+  
 Based on a PHP script I made years ago to help me figure out time required to mill parts as well as toolpaths preview.  
   
 Uses [libGD](https://libgd.github.io/), [libpng](http://www.libpng.org/), [zlib](https://zlib.net/) for the console part.  
@@ -11,46 +12,25 @@ Require [Ansicon](https://github.com/adoxa/ansicon) to be installed for Windows 
 Require zlib1g-dev, libpng-dev, libgd-dev, libgl-dev, libglfw3-dev to be installed on Linux in order to compile.  
   
   
-#### Upcoming update 0.4a (no to-be-deployed date yet, listen under already done):
-- Massive modifications on internal work/code.
-- Multi languages support eased.
-- Config file parser reworked using implement fixes from other projects (vars name, data type, comments) plus few performance upgrades.
-- Gcode parser performance/compat upgrade (10-20% faster):
-  * Use of custom strtok() function.
-  * Better detection of CutView data.
-  * Comment parsing rework.
-- LibGD upgrade (png file output):
-  * Performance update.
-  * Depth map export if CutView tools data detected.
-- Implement output of HTML with embed SVG/JS data:
-  * Allow interactive navigation thru the data extracted from gcode file.
-  * Since SVG isn't a rasted format file, output file will be bigger than original file (sometime massively bigger).
-  * Preview performance will depend on user computer and browser used.
-  * Still in primitive state.
-- Better debug outputs (including gcode, png, svg, gl).
-- More things to come (didn't everything in mind when updating this)...
-- Compile command lines will be updated when this update will be pushed.
-  
-  
 #### Limitations (may be implemented in the future):  
-- This code still messy.  
-- Doesn't support axis accelerations.  
+- This code will still be messy.  
+- Doesn't support axis accelerations or jerks.  
   
   
 #### Limitations (very low chance of implementation):  
-- Units : Doesn't take account of G20 (inch), will be considered as mm.  
-- Work plane : Only support G17 (XY), G18-19 are ignored.  
-- Tool compensation : Only support no compensation (G40), G41-42 are ignored.  
+- Units : G20 (inch coordonates system) ignored, will be considered as mm.  
+- Work plane : Only support G17 (XY plane), G18-19 are ignored.  
+- Tool compensation : Only support no compensation (G40), G41-42 codes are ignored.  
   
   
 #### Windows Console specific (Windows 10/11 H2 or newer):  
-- With recent updates (late 2021+), program normally running with cmd.exe (conhost.exe) are now using Windows Console by default.  
-- Since Windows Console doesn't handle process creation the "old way" and also supports ANSI formatting, you should compile the program without ANSICON support by defining 'WINCON' in compiling command line (e.g. adding -DWINCON to compile line).  
-- Precompiled version will provided ANSICON compatible executable (nc2png.exe) but also no check executable (nc2png-wincon.exe).  
-- Config file (nc2png.cfg) is shared between ANSICON and WINCON version, no need to split folder when in multi compatible systems (mainly network shared folders).  
+- With "recent" Windows updates (late 2021+), console programs running with cmd.exe (conhost.exe) are now using Windows Console by default.  
+- Since Windows Console doesn't handle process/thread creation the "old way" and also alreadysupports ANSI formatting, you should compile the program without ANSICON support by defining 'WINCON' in compiling command line (e.g. adding -DWINCON to compile line).  
+- Precompiled version will provid both ANSICON compatible executable (nc2png.exe) and also "ANSI no check" version of the program (nc2png-wincon.exe).  
+- Config file (nc2png.cfg) is shared between ANSICON and WINCON version, no need to split folders when in multi compatible systems (mainly network shared folders).  
   
   
-#### Features :  
+#### Features (updated version) :  
 - Work in absolute and relative mode (G90-91-90.1-91.1), note: Relative mode not fully tested.  
 - Support linear as well as circular moves (G0-1-2-3).  
 - Support of drilling cycles (currently G81-82-83-80).  
@@ -61,14 +41,34 @@ Require zlib1g-dev, libpng-dev, libgd-dev, libgl-dev, libglfw3-dev to be install
 - OpenGL viewport (note: Antialiasing disabled by default as it drops framerate over 10 times compared to normal mode without real benefits)
   
   
+#### Update 0.4 specific notes:
+- Massive modifications on internal work/code.
+- Multi languages support eased.
+- Config file parser reworked using implement fixes from other projects (vars name, data type, comments) plus other upgrades.
+- Gcode parser performance/compat upgrade (10-20% faster):
+  * Use of custom a strtok() function to increase parser performance on 100k+ lines gcode files (mainly aiming FDP printer gcode).
+  * Better detection of CutView data.
+  * Comment parsing rework.
+- LibGD upgrade (png file output):
+  * Performance update.
+  * Depth map export if CutView tools data detected.
+- Implement output of HTML with embed SVG/JS data:
+  * This may be droped in the future, the amount a lines and circles make browser lag badly (even on modern systems).
+  * Allow interactive navigation thru the data extracted from gcode file.
+  * Since SVG isn't a rasted format file, output file will be bigger than original file (sometime massively bigger).
+  * Preview performance will depend on user computer and browser used.
+  * Still in primitive state.
+- Better debug outputs (including gcode, png, svg, gl).
+  
+  
 #### Preview features :  
-- Partially compatible with Cutview codes (used to include visual tool width).  
+- Partially compatible with Cutview codes (used to include visual tool cut width).  
 - Different colors depending on the kind of move.  
 - If containing Cutview tool definition, display "cut" toolpaths with variable color depending on cut depth.  
 - PPM implementation to allow real size printing.
   
-![report](img/prev01.png)  
-![preview](img/prev02.png)  
+![report](img/prev-time-con.png)  
+![preview](img/prev-png.png)  
   
   
 #### OpenGL preview features :  
@@ -78,14 +78,30 @@ Require zlib1g-dev, libpng-dev, libgd-dev, libgl-dev, libglfw3-dev to be install
   - Slider to limit toolpath visualization
   - Allow to display/hide subgrid/grid/axis/gcode "layers" and separate toolpaths kind.
   - Allow to edit configuration file via Gui.
+  - Depthmap to "preview" material removal.
+  - color highlighted possible tool crash.
+  - external debug shaders can be used, look at ./include/glsl_shaders folder for more informations.
+  
   
   Note:  
   Preview can fail and program closes without notice on Windows 10/11.  
-  This can be caused (on multi GPU systems) by the way Windows power management works.  
-  A possible fix is to force usage of a specific GPU (Computer settings > System > Display > Graphics settings).  
+  This can be caused (on multi GPUs/monitors systems) by the way Windows power management works, A possible fix is to force usage of a specific GPU (Computer settings > System > Display > Graphics settings).  
   
-![glpreviewnc](img/prevgl01.png)  
-![glpreviewfdm](img/prevgl02.png)  
+Toolpaths reports:  
+![glpreviewnc](img/prevgl-reports.png)  
+  
+FDM,FFM visual preview:  
+![glpreviewfdm](img/prevgl-fdm.png)  
+  
+OpenGL tool cut depth preview:  
+![glpreviewfdm](img/prevgl-depth01.png)  
+  
+OpenGL tool crash preview (STILL A PRIMITIVE DETECTION, this mainly triggers if G0 goes under working depth):  
+![glpreviewfdm](img/prevgl-toolcrash01.png) 
+![glpreviewfdm](img/prevgl-toolcrash02.png) 
+  
+#### OpenGL preview specific notes :
+- The program allow loading of external OpenGL shaders, this is mainly used for debug purpose. You can copy content of ./include/glsl_shaders folder to program folder to debug bogus GLSL shaders. it is highly recommanded to edit "nc2png.cfg" and set "debugOpenGL" to 1 to know if external shader compiled successfully.
   
   
 #### Usage :  
@@ -129,11 +145,14 @@ In following lines, you will have to replace {MSYS2_PATH} by your full path to M
 #### Cross-compile on Linux (Ubuntu Server):  
 Everything done here using terminal.  
 Require `make`, `git`, `tar`, `mingw-w64`, `mingw-w64-tools`, `unzip`, `dos2unix` packages to be installed.  
-Required libraries urls may change without notice, if you get 404 errors, please check following website for updated versions:  
+  
+Since I do update this project when now need applies, some libraries urls may change over time, if you get 404 errors, please check following website for updated versions:  
 - https://zlib.net/
 - https://sourceforge.net/projects/libpng/
 - https://github.com/libgd/libgd/
   
+Specific note: links are provided "as is". I you do have troubles sourcing files, please open a issue.  
+
 ```
 cd $HOME
 mkdir work
@@ -264,4 +283,13 @@ chmod 755 $nc2png_build_path/nc2png
 ## Known issues:
 - OpenGL preview not opening on Win10/11 : Please refer to ```OpenGL preview features`` section.
 - Program closes on Win10/11 H2 (2022+) : if preview line requirement meet: please check ``Windows Console`` section.
-- Some "cut" tool paths preview can look weird, offsized or undersized, this is mainly liked to integer rounding. This problem may be solved in the future when other side projects done. 
+- Some "cut" tool paths preview can look weird, offsized or undersized, this is mainly liked to integer rounding. This problem may be solved in the future when other side projects done.
+- On Windows older systems (2000, XP): ```libwinpthread-1 (libwinpthread-1.dll)``` missing, please copy [libwinpthread-1.dll](libwinpthread-1.dll) to your ```nc2png``` folder.
+  
+## Any other issues:
+- Please keep in mind I started this project a very long time ago (10+yrs).  
+- I do work on this project on my spare time when I feel the need to implement fixes and new things.  
+- I am open to suggestions.  
+- Please open a Issue if you think behave a abnormal way.  
+- PLEASE keep in mind that this tool is AND WILL REMAIN a 2.5D tool.  
+

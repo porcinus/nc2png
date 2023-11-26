@@ -5,263 +5,387 @@ Generate preview and time estimations based on gcode file (milling)
 Main file
 */
 
+#include "nc2png_language.h"
 #include "ncparser.h"
 #include "nc2png.h"
 
-void show_usage () { //display usage to user
-    char strBuffer [10]; //string buffer
-	printf("nc2png v\033[1;32m%s\033[0m (https://github.com/porcinus/nc2png)\n", programversion);
-    printf("%s : \033[1;33mnc2png Whateverfullpath/file.nc\033[0m\n", strMain[language][STR_MAIN::USAGE_EXAMPLE]);
-    printf("Options:\n");
-    printf("\t-cfg, %s [%s]\n", strMain[language][STR_MAIN::USAGE_NEWCFG], strMain[language][STR_MAIN::USAGE_OPTIONAL]);
-    printf("\t-reset, %s [%s]\n", strMain[language][STR_MAIN::USAGE_DELCFG], strMain[language][STR_MAIN::USAGE_OPTIONAL]);
-    printf("\t-debug, %s [%s]\n", strMain[language][STR_MAIN::USAGE_DEBUG], strMain[language][STR_MAIN::USAGE_OPTIONAL]);
-    printf("\n%s:\n", strMain[language][STR_MAIN::USAGE_LIBRARIES]);
-    printf( "- libGD (%s): https://libgd.github.io/\n"
+
+void showUsage(void){ //display usage to user
+	printfTerm("nc2png v\033[1;32m%s\033[0m (https://github.com/porcinus/nc2png)\n", programversion);
+    printfTerm("%s : \033[1;33mnc2png Whateverfullpath/file.nc\033[0m\n", strUsageTerm[STR_USAGE::USAGE_EXAMPLE][language]);
+    printfTerm("Options:\n");
+    printfTerm("\t-cfg-new, %s [%s]\n", strUsageTerm[STR_USAGE::USAGE_CFGNEW][language], strUsageTerm[STR_USAGE::USAGE_OPTIONAL][language]);
+    printfTerm("\t-cfg-edit, %s [%s]\n", strUsageTerm[STR_USAGE::USAGE_CFGEDIT][language], strUsageTerm[STR_USAGE::USAGE_OPTIONAL][language]);
+    printfTerm("\t-debug, %s [%s]\n", strUsageTerm[STR_USAGE::USAGE_DEBUG][language], strUsageTerm[STR_USAGE::USAGE_OPTIONAL][language]);
+    printfTerm("\n%s:\n", strUsageTerm[STR_USAGE::USAGE_LIBRARIES][language]);
+    printfTerm( "- libGD (%s): https://libgd.github.io/\n"
             "- libpng (%s): http://www.libpng.org/\n"
             "- zlib (%s): https://zlib.net/\n", GD_VERSION_STRING, PNG_LIBPNG_VER_STRING, ZLIB_VERSION);
-    printf("\nOpenGL:\n");
-    printf( "- GLFW: https://www.glfw.org/\n"
+    printfTerm("\nOpenGL:\n");
+    printfTerm( "- GLFW: https://www.glfw.org/\n"
             "- GLAD: https://glad.dav1d.de/\n"
             "- GLM: https://github.com/g-truc/glm\n"
             "- ImGui: https://github.com/ocornut/imgui\n"
             "- Huge thanks: https://learnopengl.com/Introduction\n");
-    fgets (strBuffer , 10 , stdin);
+    printf("\n\n");
 }
 
 
-int main (int argc, char *argv[]) {
-    char strBuffer [4096]; //string buffer
-    language = getLocale (); //try to recover system language
-    
-    #if (!defined WINCON && (defined _WIN32 || defined __CYGWIN__))
-    if(checkAnsiconModule() > 0) {termColor = true; //ansicon module is found
-    } else {
-        if (!shouldRunAnsicon && checkAnsiconExists () != 0){ //ansicon found in PATH
-            char tmpArgs [PATH_MAX];
-            char tmpPath [PATH_MAX];
-            GetModuleFileName(NULL, tmpPath, MAX_PATH); //get current exe fullpath
-            sprintf(tmpArgs, "ansicon.exe \"%s\" -ansicon", tmpPath); //add ansicon to arguments
-            for(int i = 1; i < argc; ++i){sprintf(tmpArgs, "%s %s", tmpArgs, argv[i]);} //rebuild arguments for next execution
-            STARTUPINFO si; PROCESS_INFORMATION pi; ZeroMemory( &si, sizeof(si) ); si.cb = sizeof(si); ZeroMemory( &pi, sizeof(pi) ); //because needed...
-            if(debug){fprintf(stderr,"DEBUG: CMD: %s\n", tmpArgs);}
-            if (!CreateProcess(NULL, tmpArgs, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
-                if(debug){fprintf(stderr,"DEBUG: Create process failed (%ld)\n", GetLastError());}
-                printf("%s\n", strMain[language][STR_MAIN::ANSICON_MODULE]);
-            } else {
-                if(debug){fprintf(stderr,"DEBUG: New process for Ansicon created with success\n");}
+double get_time_double(void){ //get time in double (seconds)
+    struct timespec tp; int result = clock_gettime(CLOCK_MONOTONIC, &tp);
+    if (result == 0) {return tp.tv_sec + (double)tp.tv_nsec/1e9;}
+    return -1.; //failed
+}
+
+
+bool userInput(bool alwaysTrue){ //read stdin, return true when return char detected, false overwise
+    bool ret = alwaysTrue;
+    for (unsigned int i = 0; i < INPUT_BUFFER_SIZE; i++){inputBuffer[i] = '\0';} //reset whole input buffer
+    debug_stderr("start user input\n");
+    fgets(inputBuffer, INPUT_BUFFER_SIZE - 1, stdin);
+    unsigned int strLen = strlen(inputBuffer);
+    if (inputBuffer[strLen - 1] == 0x0A){
+        inputBuffer[strLen - 1] = '\0'; //remove return char
+        ret = true;
+    }
+    debug_stderr("buffer :'%s'\n", inputBuffer);
+    debug_stderr("return %d\n", ret ? 1 : 0);
+    return ret;
+}
+
+
+bool pressEnterClose(void){ //tty close prompt, returns userInput return
+    printfTerm("%s\n", strGeneric[STR_GENERIC::GENERIC_PRESSKEYCLOSE][language]);
+    return userInput(true);
+}
+
+
+bool pressEnterContinue(void){ //tty continue prompt, returns userInput return
+    printfTerm("%s\n", strGeneric[STR_GENERIC::GENERIC_PRESSKEYCONTINUE][language]);
+    return userInput(false);
+}
+
+
+bool pressEnterSave(void){ //tty save prompt, returns userInput return
+    printfTerm("%s\n", strConfigEditTerm[STR_CONFIG_EDIT_TERM::TERM_SAVE_CONFIRM][language]);
+    return userInput(false);
+}
+
+
+void configEditTerm(void){ //new settings screen
+    char strBuffer[100];
+    for (unsigned int i = 0; i < cfg_vars_arr_size; i++){
+        bool cfg_vars_to_skip = false;
+        for (unsigned int j = 0; j < cfg_vars_skip_size; j++){
+            if (strcmp(cfg_vars_skip[j], cfg_vars[i].name) == 0){
+                cfg_vars_to_skip = true;
+                break;
             }
+        }
+
+        if (!cfg_vars_to_skip){
+            config_value_to_str(strBuffer, 99, cfg_vars[i].type, cfg_vars[i].ptr);
+            printfTerm("\033[0m%s (\033[1;33m%s\033[0m): \n > \033[1;32m", strConfigItem[i][language], strBuffer);
+            if (userInput(false)){ //user entered a value
+                config_type_parse(cfg_vars, cfg_vars_arr_size, i, cfg_vars[i].type, (char*)cfg_vars[i].name, inputBuffer);
+            } else {exit(0);}
+        }
+    }
+    
+    printfTerm("\033[0m\n\033[1m%s\033[0m\n", strConfigEditTerm[STR_CONFIG_EDIT_TERM::TERM_NEW_SETTINGS][language]);
+    for (unsigned int i = 0; i < cfg_vars_arr_size; i++){
+        config_value_to_str(strBuffer, 99, cfg_vars[i].type, cfg_vars[i].ptr);
+        printfTerm("\033[0m%s > \033[1;32m%s\033[0m\n", strConfigItem[i][language], strBuffer);
+    }
+    printf("\n");
+    if (pressEnterSave()){
+        config_save(cfg_vars, cfg_vars_arr_size, (char*)cfg_filename, -1, -1, false); //save new config
+    } else {exit(0);} //quit program
+}
+
+
+void configManuTerm(char** varsList, unsigned int varCount){ //manual settings screen
+    char strBuffer[100];
+    for (unsigned int i = 0; i < varCount; i++){
+        if (varsList[i] == NULL){continue;}
+        int cfgIndex = config_search_name(cfg_vars, cfg_vars_arr_size, varsList[i], true); //get index from config var
+        if (cfgIndex != -1){
+            config_value_to_str(strBuffer, 99, cfg_vars[cfgIndex].type, cfg_vars[cfgIndex].ptr);
+            printfTerm("\033[0m%s (\033[1;33m%s\033[0m): \n > \033[1;32m", strConfigItem[cfgIndex][language], strBuffer);
+            if (userInput(false)){ //user entered a value
+                config_type_parse(cfg_vars, cfg_vars_arr_size, cfgIndex, cfg_vars[cfgIndex].type, (char*)cfg_vars[cfgIndex].name, inputBuffer);
+            } else {exit(0);}
+        }
+    }
+    printf("\n");
+}
+
+
+#if (defined _WIN32 || defined __CYGWIN__)
+    BOOL WINAPI CtrlHandler(DWORD signal){ //handle ctrl-c on windows to avoid ansicon glitch that doesn't reset ansi code
+        if (signal == CTRL_C_EVENT){
+            debug_stderr("Windows: Ctrl+C triggered\n");
+            //programClose();
+            exit(0);
+        }
+        return true;
+    }
+#else
+    void programSignal(int signal){ //program received a signal that kills it
+        debug_stderr("signal received:%d\n", signal);
+        exit(0);
+    }
+#endif
+
+
+void programClose(void){ //run when program closes
+    //todo align failed return code to errno
+    if (alreadyKilled){return;}
+    usleep(100000); //avoid potential garbage on tty output
+    if (termColor){printf("\033[0m");} //reset ansi formatting
+    
+    //free nc parser vars
+    debug_stderr("memory cleanup\n");
+    if (ncFlags != nullptr){delete []ncFlags; ncFlags = nullptr;} //g flags
+    if (ncLines != nullptr){delete []ncLines; ncLines = nullptr;} //lines data
+    if (ncDataTools != nullptr){delete []ncDataTools; ncDataTools = nullptr;} //tools data
+    if (ncComments != nullptr){delete []ncComments; ncComments = nullptr;} //operations time
+    
+    alreadyKilled = true;
+}
+
+int main(int argc, char* argv[]){
+    program_start_time = get_time_double(); //program start time, mainly used for debug
+
+    atexit(programClose); //run on program exit
+
+    //avoid run loop if ansicon not installed in windows, or terminal detection failed
+    bool programRestarted = false;
+	for (int i = 1; i < argc; ++i){
+        if (strcmp(argv[i], "-restarted") == 0){
+            programRestarted = true; //should be run in ansicon mode or in a new terminal
+            argv[i][0] = '\0';
+		} else if (strcmp(argv[i], "-debug") == 0){
+            debug = true; //debug mode
+            argv[i][0] = '\0';
+        }
+	}
+    debug_stderr("programRestarted:%d\n", programRestarted ? 1 : 0);
+    
+    //terminal signal handling
+    #if (defined(_WIN32) || defined(__CYGWIN__))
+        SetConsoleCtrlHandler((PHANDLER_ROUTINE) CtrlHandler, true); //handle ctrl-c on windows to avoid ansicon glitch that doesn't reset ansi code
+    #else
+        signal(SIGINT, programSignal); //ctrl-c
+        signal(SIGTERM, programSignal); //SIGTERM from htop or other, SIGKILL not work as program get killed before able to handle
+        signal(SIGABRT, programSignal); //failure
+    #endif
+    
+    //try to get system language
+    language = getLocale();
+    
+    #if (defined _WIN32 || defined __CYGWIN__)
+        #ifndef WINCON
+            //ansicon allow ansi escape code compat with older windows systems
+            if(checkAnsiconModule() > 0){termColor = true; //ansicon module is found
+            } else if (!programRestarted && checkAnsiconExists() != 0){ //ansicon found in PATH
+                char tmpArgs[PATH_MAX];
+                char tmpPath[PATH_MAX];
+                GetModuleFileName(NULL, tmpPath, MAX_PATH); //get current exe fullpath
+                sprintf(tmpArgs, "ansicon.exe \"%s\" -restarted", tmpPath); //add ansicon to arguments
+                for(int i = 1; i < argc; ++i){sprintf(tmpArgs, "%s %s", tmpArgs, argv[i]);} //rebuild arguments for next execution
+                STARTUPINFO si; PROCESS_INFORMATION pi; ZeroMemory(&si, sizeof(si)); si.cb = sizeof(si); ZeroMemory(&pi, sizeof(pi)); //because needed...
+                debug_stderr("cmd: %s\n", tmpArgs);
+                if (!CreateProcess(NULL, tmpArgs, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+                    debug_stderr("create process failed (%ld)\n", GetLastError());
+                    printfTerm("%s\n", strAnsi[STR_ANSI::ANSICON_MODULE][language]);
+                    pressEnterClose();
+                } else {
+                    debug_stderr("new process for Ansicon created with success\n");
+                }
+                return 0;
+            }
+        #endif
+    #else
+        //doesn't look to be running from terminal
+        if (!programRestarted && !runningFromTerminal()){
+            const char* terminal = terminalFilePath();
+            if (terminal == NULL){
+                debug_stderr("failed to detect system terminal emulator\n");
+                return 0;
+            }
+            char tmpArgs[PATH_MAX];
+            sprintf(tmpArgs, "%s \"'%s' -restarted", terminal, argv[0]);
+            for(int i = 1; i < argc; ++i){sprintf(tmpArgs, "%s %s", tmpArgs, argv[i]);} //rebuild arguments for next execution
+            strcat(tmpArgs, "\" &"); //fork
+            system(tmpArgs);
+            sleep(1); //wait a bit to avoid killing initial program before command is running
             return 0;
         }
-    }
     #endif
 
-    if (!termColor) { //not running in color mode
-        printf("%s\n", strMain[language][STR_MAIN::ANSICON_NEEDED]);
-        fgets (strBuffer , 10 , stdin); //wait for use input
-        return 0; //bye
-    } else {
-        #if (!defined WINCON && (defined _WIN32 || defined __CYGWIN__))
-        SetConsoleCtrlHandler((PHANDLER_ROUTINE) CtrlHandler, true); //handle ctrl-c on windows to avoid ansicon glitch that doesn't reset ansi code
+    //not running in color mode
+    #if (!defined WINCON && (defined _WIN32 || defined __CYGWIN__))
+        if (!termColor){
+            printfTerm("%s\n", strAnsi[STR_ANSI::ANSI_REQUIRED][language]);
+            pressEnterClose();
+            return 0;
+        }
+    #endif
+
+    { //get program path and change current working folder
+        char programPath[strlen(argv[0]) + 3]; strcpy(programPath, argv[0]);
+        #if defined _WIN32
+            char *tmpPtr = strrchr(programPath, '\\');
+        #else
+            char *tmpPtr = strrchr(programPath, '/');
         #endif
+        if (tmpPtr != NULL){*(tmpPtr + 1) = '\0'; chdir(programPath);}
     }
+    
+    //parse program arguments
+    char ncFilePath[PATH_MAX] = "", ncFilename[PATH_MAX] = ""; //full path/filename of nc file
 
-    //dirty but working
-    char programPath [PATH_MAX]; strcpy (programPath, argv[0]);
-#if defined _WIN32
-    char pathSep = '\\';
-#else
-    char pathSep = '/';
-#endif
-    char *tmpPtr = strrchr(programPath, pathSep);
-    if (tmpPtr !=NULL){
-        *(tmpPtr + 1)='\0';
-        chdir (programPath); //correct current program directory to avoid multiple config files
-    }
-
-    char ncFilePath [PATH_MAX] = "";//{'\0'}; //full path to nc file
-    char ncFilename [PATH_MAX] = "";//{'\0'}; //nc file
-
-    configParse ();
-	for(int i = 1; i < argc; ++i){ //argument to variable
-		if (strcmp(argv[i], "-cfg") == 0) {configEdit (false); return 0; //config mode
-		} else if (strcmp(argv[i], "-reset") == 0) {configSave (true); return 0; //reset config mode
-		} else if (strcmp(argv[i], "-ansicon") == 0) {shouldRunAnsicon = true; //should run in ansicon mode
-		} else if (strcmp(argv[i], "-debug") == 0) {debug = true; //debug mode
-        } else {sprintf (ncFilePath, "%s %s", ncFilePath, argv[i]);}
-	}
-/*
-if (strlen(ncFilePath) < 1) {
-strcpy (ncFilePath, "support vesa 5mm x3.nc"); //DEBUG GL
-}
-*/
-    if (strlen(ncFilePath) > 0) {
-        struct stat filestat;
-        if (ncFilePath [0] == ' ') { //shift left if start by space
-            //strcpy(ncFilePath, ncFilePath + 1); //broken on linux 64bits for some CPU
-            memmove(ncFilePath, ncFilePath+1, strlen(ncFilePath)); //use memmove instead to shift char array
-        }
-        stat(ncFilePath, &filestat);
-        if (filestat.st_size > 0) {
-            if(debug){fprintf(stderr,"DEBUG: %s found\n", ncFilePath);}
-        } else {
-            printf("Error: '%s' not found\n\n", ncFilePath);
-            ncFilePath[0]='\0';
-        }
-    }
-
-    if (strlen(ncFilePath) == 0) {show_usage(); return 0;} //no arguments, show help, quit
-
-    configManu (); //only config edit without save
-
-    //parser
-    clock_t timerStart, timerEnd;
-    timerStart = clock(); //start timer
-
-    int ncLineCount = NCcountLines (ncFilePath); //count nb ob lines in nc file ot avoid overhead
-    int NCparseResult = 0, gdPreviewResult = 0, glPreviewResult = 0;
-    if (ncLineCount > 0) {
-        if(debug){fprintf(stderr,"DEBUG: NC : line count : %d\n", ncLineCount);}
-
-        ncFlagsStruc *ncFlags = new ncFlagsStruc; //nc flags
-        ncLineStruc *ncLines = new ncLineStruc [ncLineCount]; //consider num of lines in file as amount of lines in numcode
-        ncToolStruc *ncDataTools = new ncToolStruc [ncToolsLimit]; //limit to 100 tools
-        ncDistTimeStruc *ncDataTime = new ncDistTimeStruc [ncCommentsLimit]; //limit to 100 comments
-        ncLimitStruc *ncDataLimits = new ncLimitStruc; //nc limits
-        ncLinesCountStruc *ncLinesCount = new ncLinesCountStruc; //nc lines data
-
-        ncArraySize *ncArraySizes = new ncArraySize; //array size limits
-        ncArraySizes->lineStrucLimit = ncLineCount;
-        ncArraySizes->toolStrucLimit = ncToolsLimit;
-        ncArraySizes->distTimeStrucLimit = ncCommentsLimit;
-
-        NCparseResult = NCparseFile (ncFilePath, ncFlags, ncLines, ncDataTools, ncDataTime, ncDataLimits, ncLinesCount, ncArraySizes, debug);
-        if (NCparseResult != 0) {printf ("\033[1;31mNCopenFile failed with code: %d\033[0m", NCparseResult); //failed to read nc file
-        } else {
-            if(debug){fprintf(stderr,"NC file parse succesfully");}
-            double parserDuration = 0.;
-            timerEnd = clock(); parserDuration = (double)(timerEnd - timerStart) / CLOCKS_PER_SEC;
-
-            //parser output
-            char timeArr [] = "000h 00min";
-            char time1Arr [] = "000h 00min";
-            double timeWork = ncLinesCount->totalTimeWork, timeFast = ncLinesCount->totalTimeFast, timeCircular = 0, timeDrill = 0;
-            char commentName [sizeof(ncDataTime[0].name) / sizeof(ncDataTime[0].name[0])] = {};
-            if (ncArraySizes->distTimeStrucLimit == 1 && strlen(ncDataTime[0].name) == 0) {strcpy(ncDataTime[0].name, strMain[language][STR_MAIN::NC_NOCOMMENT]);} //default comment name if no comments
-
-            tmpPtr = strrchr(ncFilePath, '/');
-            if (tmpPtr != NULL) {strcpy(ncFilename, tmpPtr + 1);
-            } else {tmpPtr = strrchr(ncFilePath, '\\'); if (tmpPtr != NULL) {strcpy(ncFilename, tmpPtr + 1);} else {strcpy(ncFilename, ncFilePath);}}
-
-            printf("\n\n");
-            printf (strMain[language][STR_MAIN::REPORT_L01], ncFilename);
-            printf (strMain[language][STR_MAIN::REPORT_L02], speedFastXY);
-            printf (strMain[language][STR_MAIN::REPORT_L03], speedFastZ);
-            printf (strMain[language][STR_MAIN::REPORT_L04]);
-            printf (strMain[language][STR_MAIN::REPORT_L05], ncFlags->coord);
-            printf (strMain[language][STR_MAIN::REPORT_L06], ncFlags->circular);
-            printf (strMain[language][STR_MAIN::REPORT_L07], ncFlags->unit);
-            if (ncFlags->unit == 20) {printf (strMain[language][STR_MAIN::REPORT_L08]);} else {printf ("\n");}
-            printf (strMain[language][STR_MAIN::REPORT_L09], ncFlags->compensation);
-            if (ncFlags->compensation != 40) {printf (strMain[language][STR_MAIN::REPORT_L10]);} else {printf ("\n");}
-            printf (strMain[language][STR_MAIN::REPORT_L11], ncFlags->workplane);
-            if (ncFlags->workplane != 17) {printf (strMain[language][STR_MAIN::REPORT_L12]);} else {printf ("\n");}
-            printf("\n\n");
-            printf (strMain[language][STR_MAIN::REPORT_L13]);
-            sec2charArr (timeArr, timeWork * 60);
-            printf (strMain[language][STR_MAIN::REPORT_L14], timeArr);		
-            sec2charArr (timeArr, timeFast * 60);
-            printf (strMain[language][STR_MAIN::REPORT_L15], timeArr);
-            sec2charArr (timeArr, (timeWork + timeFast) * 60);
-            printf (strMain[language][STR_MAIN::REPORT_L16], timeArr);	
-            for (unsigned int i=0; i<ncCommentsLimit; i++) {
-                if (ncDataTime[i].distWork > 0 || ncDataTime[i].distFast > 0){
-                    sec2charArr (timeArr, (ncDataTime[i].timeWork) * 60); sec2charArr (time1Arr, (ncDataTime[i].timeFast) * 60);
-                    #if defined _WIN32
-                    UTF8toCP850 (ncDataTime[i].name, commentName);
-                    #else
-                    strcpy(commentName, ncDataTime[i].name);
-                    #endif
-                    printf (strMain[language][STR_MAIN::REPORT_L17A], commentName);
-                    printf (strMain[language][STR_MAIN::REPORT_L17B], timeArr, time1Arr);
-                }
-            }
-
-            if (speedPercent < 100) {
-                printf("\n\n");
-                printf (strMain[language][STR_MAIN::REPORT_L18], speedPercent);
-                sec2charArr (timeArr, (timeWork / ((double)speedPercent / 100)) * 60);
-                printf (strMain[language][STR_MAIN::REPORT_L19], timeArr);		
-                sec2charArr (timeArr, (timeFast / ((double)speedPercent / 100)) * 60);
-                printf (strMain[language][STR_MAIN::REPORT_L20], timeArr);
-                sec2charArr (timeArr, ((timeWork + timeFast) / ((double)speedPercent / 100)) * 60);
-                printf (strMain[language][STR_MAIN::REPORT_L21], timeArr);	
-                for (unsigned int i=0; i<ncCommentsLimit; i++) {
-                    if (ncDataTime[i].distWork > 0 || ncDataTime[i].distFast > 0){
-                        sec2charArr (timeArr, (ncDataTime[i].timeWork / ((double)speedPercent / 100)) * 60); sec2charArr (time1Arr, (ncDataTime[i].timeFast / ((double)speedPercent / 100)) * 60);
-                        #if defined _WIN32
-                        UTF8toCP850 (ncDataTime[i].name, commentName);
-                        #else
-                        strcpy(commentName, ncDataTime[i].name);
-                        #endif
-                        printf (strMain[language][STR_MAIN::REPORT_L22A], commentName);
-                        printf (strMain[language][STR_MAIN::REPORT_L22B], timeArr, time1Arr);
-                    }
-                }
-            }
-            printf("\n\n");
-            printf (strMain[language][STR_MAIN::REPORT_L23]);
-            printf (strMain[language][STR_MAIN::REPORT_L24], ncDataLimits->xMin, ncDataLimits->xMax, ncDataLimits->xMax - ncDataLimits->xMin);
-            printf (strMain[language][STR_MAIN::REPORT_L25], ncDataLimits->yMin, ncDataLimits->yMax, ncDataLimits->yMax - ncDataLimits->yMin);
-            printf (strMain[language][STR_MAIN::REPORT_L26], ncDataLimits->zMin, ncDataLimits->zMax, ncDataLimits->zMax - ncDataLimits->zMin);
-            printf("\n\n");
-            printf (strMain[language][STR_MAIN::REPORT_L27]);
-            timeWork = timeFast = timeCircular = timeDrill = 0; for (unsigned int i=0; i<ncCommentsLimit; i++) {if (ncDataTime[i].distWork > 0 || ncDataTime[i].distFast > 0){timeWork += ncDataTime[i].distWork; timeFast += ncDataTime[i].distFast; timeCircular += ncDataTime[i].distCircular; timeDrill += ncDataTime[i].distDrill;}}
-            printf (strMain[language][STR_MAIN::REPORT_L28], timeWork);
-            printf (strMain[language][STR_MAIN::REPORT_L29], timeFast);
-            printf (strMain[language][STR_MAIN::REPORT_L30], timeCircular);
-            printf (strMain[language][STR_MAIN::REPORT_L31], timeDrill);
-            printf (strMain[language][STR_MAIN::REPORT_L32], timeWork + timeFast);
-            printf("\n\n");
-            printf (strMain[language][STR_MAIN::REPORT_L33]);
-            printf (strMain[language][STR_MAIN::REPORT_L34], ncLinesCount->all);
-            printf (strMain[language][STR_MAIN::REPORT_L35], ncLinesCount->commented);
-            printf (strMain[language][STR_MAIN::REPORT_L36], ncLinesCount->skip);
-            printf (strMain[language][STR_MAIN::REPORT_L37], ncLinesCount->g0);
-            printf (strMain[language][STR_MAIN::REPORT_L38], ncLinesCount->g1);
-            printf (strMain[language][STR_MAIN::REPORT_L39], ncLinesCount->g2);
-            printf (strMain[language][STR_MAIN::REPORT_L40], ncLinesCount->g3);
-            printf (strMain[language][STR_MAIN::REPORT_L41], ncLinesCount->g81);
-            
-            printf("\n\n");
-            printf(strMain[language][STR_MAIN::GENTIME_NC], parserDuration);
-
-            //gd preview
-            timerStart = clock();
-            gdPreviewResult = gdPreview (ncFilePath, gdWidth, gdArcRes, ncLines, ncDataTools, ncDataTime, ncDataLimits, ncLinesCount, debug);
-            if (NCparseResult != 0) {printf ("\033[1;31mgdPreview failed with code: %d\033[0m", gdPreviewResult); //failed to generate gd preview
+	for(int i = 1; i < argc; ++i){
+		if (strcmp(argv[i], "-cfg-new") == 0){configEditTerm(); return 0; //new config
+		} else if (strcmp(argv[i], "-cfg-edit") == 0){ //edit config
+            if (i + 1 < argc && config_set(cfg_vars, cfg_vars_arr_size, (char*)cfg_filename, -1, -1, true, argv[++i]) == 0){ //update var in config file
+                config_save(cfg_vars, cfg_vars_arr_size, (char*)cfg_filename, -1, -1, false); //save new config
             } else {
-                double previewDuration = 0.;
-                timerEnd = clock(); previewDuration = (double)(timerEnd - timerStart) / CLOCKS_PER_SEC;
-                printf(strMain[language][STR_MAIN::GENTIME_GD], previewDuration);
-
-                glPreviewResult = -1;
-                if (glViewportEnable != 0){
-                    glPreviewResult = glPreview (ncLines, ncDataTools, ncDataTime, ncDataLimits, ncLinesCount, ncArraySizes, debug); //start gl preview
-                    if (glPreviewResult != 0) {printf ("\033[1;31mOpenGL preview failed with code: %d\033[0m", gdPreviewResult);}
-                }
+                printfTerm("%s\n", strConfigEditTerm[STR_CONFIG_EDIT_TERM::TERM_INVALID_EDIT_FORMAT][language]); //invalid format
             }
+            return 0;
+        } else if (argv[i][0] != '\0'){sprintf(ncFilePath, "%s %s", ncFilePath, argv[i]);}
+	}
+    
+    //parse/create config file
+    if (config_parse(cfg_vars, cfg_vars_arr_size, (char*)cfg_filename, -1, -1, false) < 0){
+        configEditTerm();
+        return 0;
+    }
+    
+    //if (strlen(ncFilePath) < 1){strcpy(ncFilePath, "Z:\\Work\\Programmation\\VSCode\\C++\\nc2png_local\\testnc mm.nc");}
+
+    //path to nc file provided
+    if (strlen(ncFilePath) > 0){
+        while (ncFilePath[0] == ' '){memmove(ncFilePath, ncFilePath + 1, strlen(ncFilePath));} //trim starting space(s)
+        struct stat fileStats;
+        if (stat(ncFilePath, &fileStats) == 0){
+            debug_stderr("%s found\n", ncFilePath);
+        } else {
+            printfTerm(strGeneric[STR_GENERIC::GENERIC_FILENOTFOUND][language], ncFilePath); printf("\n\n");
+            ncFilePath[0] = '\0';
         }
-
-        delete ncFlags;
-        delete ncLines;
-        delete ncDataTools;
-        delete ncDataTime;
-        delete ncDataLimits;
-        delete ncArraySizes;
-        delete ncLinesCount;
-    } else {printf ("\033[1;31mFailed to read NC file, 0 line read\033[0m");} //failed to read nc file
-
-    if (glPreviewResult != 0){fgets (strBuffer , 10 , stdin);} //wait for user input if gl failed or disabled
+    }
+    
+    //no arguments or invalid file, show help, quit
+    if (strlen(ncFilePath) == 0){
+        showUsage();
+        pressEnterClose();
+        return 0;
+    } else {
+        //extract filename
+        char *tmpPtr = strrchr(ncFilePath, '/');
+        if (tmpPtr != NULL){strcpy(ncFilename, tmpPtr + 1);
+        } else {
+            tmpPtr = strrchr(ncFilePath, '\\');
+            strcpy(ncFilename, (tmpPtr != NULL) ? tmpPtr + 1 : ncFilePath);
+        }
+        
+        //manual settings screen
+        if (!skipCncPrompt){
+            #define manuListCount 3
+            const char* manuList[manuListCount] = {"speedFastXY", "speedFastZ", "speedPercent"}; //vars allow to edit
+            configManuTerm((char**)manuList, manuListCount);
+        }
+        program_start_time = get_time_double(); //reset program start time
+    }
+    
+    //quick check nc file content
+    unsigned int ncLineCount = ncCountLines(ncFilePath); //count nb of lines in nc file to avoid overhead
+    if (ncLineCount == 0){ //empty file
+        printfTerm(strGeneric[STR_GENERIC::GENERIC_FILEISEMPTY][language], ncFilePath); printf("\n\n");
+        pressEnterClose();
+        return 0;
+    } else {debug_stderr("nc lines count : %d\n", ncLineCount);}
+    
+    //allocate memory
+    ncFlags = new(std::nothrow)ncFlagsStruct; //g flags
+    ncLines = new(std::nothrow)ncLineStruct[ncLineCount]; //lines data
+    ncDataTools = new(std::nothrow)ncToolStruct[ncToolsLimit]; //tools data
+    ncComments = new(std::nothrow)ncCommentStruct[ncCommentsLimit]; //operations time
+    if (ncFlags == nullptr || ncLines == nullptr || ncDataTools == nullptr || ncComments == nullptr){
+        printfTerm(strGeneric[STR_GENERIC::GENERIC_MEMALLOCFAILED][language], ncFilePath); printf("\n\n");
+        pressEnterClose();
+        return 0;
+    } else {
+        debug_stderr("ncFlags addr : 0x%p\n", (void *)ncFlags);
+        debug_stderr("ncLines addr : 0x%p\n", (void *)ncLines);
+        debug_stderr("ncDataTools addr : 0x%p\n", (void *)ncDataTools);
+        debug_stderr("ncComments addr : 0x%p\n", (void *)ncComments);
+    }
+    ncLimitStruct ncDataLimits = {0}; //limits
+    ncSummaryStruct ncSummary = {0}; //lines count
+    ncArraySize ncArraySizes = {.lineStrucLimit = ncLineCount, .commentStrucLimit = ncCommentsLimit, .toolStrucLimit = ncToolsLimit,}; //array size limits
+    
+    //parser
+    double durationBench = get_time_double();
+    int result = ncParseFile(ncFilePath, speedFastXY, speedFastZ, ncFlags, ncLines, ncDataTools, ncComments, &ncDataLimits, &ncSummary, &ncArraySizes, debugGcode);
+    durationBench = get_time_double() - durationBench;
+    
+    debug_stderr("ncLineCount:%u, ncArraySizes.lineStrucLimit:%u\n", ncLineCount, ncArraySizes.lineStrucLimit);
+    
+    if (result != 0){
+        printfTerm(strParserTerm[STR_FAILED_TERM::TERM_PARSER_FAILED][language], result); printf("\n\n");
+        pressEnterClose();
+        return 0;
+    }
+    
+    //nc parser info report
+    ncParseReportTerm(ncFilename, speedFastXY, speedFastZ, speedPercent, ncFlags, ncDataTools, ncComments, &ncDataLimits, &ncSummary, &ncArraySizes);
+    printfTerm(strBenchmarkReportTerm[STR_BENCHMARK_REPORT::BENCHMARK_PARSER][language], durationBench);
+    
+    //png preview
+    if (gdEnable){
+        double durationBench = get_time_double();
+        result = gdPreview(ncFilePath, gdWidth, gdArcRes, gdExportDepthMap, ncLines, ncDataTools, ncComments, &ncDataLimits, &ncSummary, &ncArraySizes, debugGD);
+        durationBench = get_time_double() - durationBench;
+        
+        if (result != 0){
+            printfTerm(strParserTerm[STR_FAILED_TERM::TERM_GD_FAILED][language], result); printf("\n\n");
+            pressEnterClose();
+            return 0;
+        }
+        
+        printfTerm(strBenchmarkReportTerm[STR_BENCHMARK_REPORT::BENCHMARK_GD][language], durationBench);
+    }
+    
+    //svg preview
+    if (svgEnable){
+        double durationBench = get_time_double();
+        result = svgPreview(ncFilePath, svgPrevArcRes, ncLines, ncDataTools, ncComments, &ncDataLimits, &ncSummary, &ncArraySizes, debugSVG);
+        durationBench = get_time_double() - durationBench;
+        
+        if (result != 0){
+            printfTerm(strParserTerm[STR_FAILED_TERM::TERM_SVG_FAILED][language], result); printf("\n\n");
+            pressEnterClose();
+            return 0;
+        }
+        
+        printfTerm(strBenchmarkReportTerm[STR_BENCHMARK_REPORT::BENCHMARK_SVG][language], durationBench);
+    }
+    
+    //opengl viewport
+    if (glViewportEnable){
+        result = glPreview(ncFilePath, ncLines, ncDataTools, ncComments, &ncDataLimits, &ncSummary, &ncArraySizes, debugOpenGL);
+        if (result != 0){
+            printfTerm(strParserTerm[STR_FAILED_TERM::TERM_OPENGL_FAILED][language], result); printf("\n\n");
+            goto majorFailure;
+        }
+        return 0;
+    }
+    
+    majorFailure:;
+    pressEnterClose();
     return 0;
 }
